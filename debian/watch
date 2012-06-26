@@ -1,0 +1,5 @@
+version=3
+
+# Homepage  Pattern  [Version  [Action]]
+http://pubshare.genzentrum.lmu.de/scientific_computing/software/ffindex/ \
+            ffindex-([0-9][0-9.]*)\.tar\.[gzbl2]{2,3}

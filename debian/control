@@ -1,0 +1,64 @@
+Source: ffindex
+Section: science
+Priority: extra
+Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
+Uploaders: Laszlo Kajan <lkajan@rostlab.org>
+Build-Depends: debhelper (>= 8.0.0), help2man
+Standards-Version: 3.9.3
+Homepage: http://pubshare.genzentrum.lmu.de/scientific_computing/software/ffindex/
+Vcs-Svn: svn://svn.debian.org/debian-med/trunk/packages/ffindex/trunk/
+Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/ffindex/trunk/
+DM-Upload-Allowed: yes
+
+Package: ffindex
+Architecture: any
+Depends: libffindex0 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: simple index/database for huge amounts of small files
+ FFindex is a very simple index/database for huge amounts of small files. The
+ files are stored concatenated in one big data file, separated by '\0'. A
+ second file contains a plain text index, giving name, offset and length of
+ the small files. The lookup is currently done with a binary search on an
+ array made from the index file.
+ .
+ This package provides the executables.
+
+Package: libffindex0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: library for simple index/database for huge amounts of small files
+ FFindex is a very simple index/database for huge amounts of small files. The
+ files are stored concatenated in one big data file, separated by '\0'. A
+ second file contains a plain text index, giving name, offset and length of
+ the small files. The lookup is currently done with a binary search on an
+ array made from the index file.
+ .
+ This package provides the shared library.
+
+Package: libffindex0-dev
+Architecture: any
+Section: libdevel
+Depends: libffindex0 (= ${binary:Version}), ${misc:Depends}
+Provides: libffindex-dev
+Description: library for simple index/database for huge amounts of small files (development)
+ FFindex is a very simple index/database for huge amounts of small files. The
+ files are stored concatenated in one big data file, separated by '\0'. A
+ second file contains a plain text index, giving name, offset and length of
+ the small files. The lookup is currently done with a binary search on an
+ array made from the index file.
+ .
+ This package contains the header files and documentation needed to develop
+ applications with libffindex.
+
+Package: ffindex-dbg
+Architecture: any
+Section: debug
+Depends: ffindex (= ${binary:Version}), libffindex0 (= ${binary:Version}), ${misc:Depends}
+Description: simple index/database for huge amounts of small files (debug)
+ FFindex is a very simple index/database for huge amounts of small files. The
+ files are stored concatenated in one big data file, separated by '\0'. A
+ second file contains a plain text index, giving name, offset and length of
+ the small files. The lookup is currently done with a binary search on an
+ array made from the index file.
+ .
+ This package provides the detached debug symbols for ffindex and libffindex.

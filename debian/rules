@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ --parallel
+
+FFMANPAGES = ffindex_apply.1 ffindex_build.1 ffindex_from_fasta.1 ffindex_get.1 ffindex_modify.1
+.PHONY: ffmanpages
+ffmanpages: $(FFMANPAGES)
+BINNAMES =	\
+		ffindex_apply="apply a program to each FFindex entry";\
+		ffindex_build="build file index from files in directories";\
+		ffindex_from_fasta="populate index from FASTA file";\
+		ffindex_get="retrieve entries from file index";\
+		ffindex_modify="modify file index entries";\
+
+.PHONY: override_dh_installman
+override_dh_installman: $(FFMANPAGES)
+	dh_installman
+
+$(FFMANPAGES): %.1 : debian/tmp/usr/bin/%
+	unset LD_PRELOAD && export LD_LIBRARY_PATH=debian/tmp/usr/lib && eval '$(BINNAMES)' && help2man --no-info --no-discard-stderr '--help-option= ' -n "$$$*" --version-option="-v" '$<' -o '$@' --include debian/man_notes.nroff
+
+.PHONY: override_dh_clean
+override_dh_clean:
+	rm -f $(FFMANPAGES)
+	dh_clean
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip --dbg-package=ffindex-dbg
+
+# [Laszlo Kajan <lkajan@rostlab.org>]
+# ffindex has an overly large default for FFINDEX_MAX_INDEX_ENTRIES (40000000). In order to require less RAM for testing the package (make check), a more modest value is set below.
+.PHONY: override_dh_auto_test
+override_dh_auto_test:
+	dh_auto_test -- FFINDEX_MAX_INDEX_ENTRIES=20000
+
+get-orig-source:
+	mkdir -p ../tarballs
+	uscan --verbose --force-download --destdir=../tarballs

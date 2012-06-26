@@ -1,0 +1,18 @@
+From: Laszlo Kajan <lkajan@rostlab.org>
+Subject: hardening flags
+Forwarded: yes
+
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -15,6 +15,11 @@
+ 
+ #-Wl,--version-script=libffindex.map
+ 
++# hardening flags
++CFLAGS+=-g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security
++CPPFLAGS+=-D_FORTIFY_SOURCE=2
++LDFLAGS+=-Wl,-z,relro
++
+ ifdef HAVE_MPI
+ all: ffindex_apply_mpi ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so
+ else

@@ -1,0 +1,19 @@
+ffindex (0.9.6.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fixed many bugs.
+
+ -- Laszlo Kajan <lkajan@rostlab.org>  Tue, 26 Jun 2012 11:43:41 +0200
+
+ffindex (0.9.3-2) unstable; urgency=low
+
+  * Included full text of CC-BY-SA-3.0 license (Closes: #667698)
+
+ -- Laszlo Kajan <lkajan@rostlab.org>  Mon, 23 Apr 2012 11:30:03 +0200
+
+ffindex (0.9.3-1) unstable; urgency=low
+
+  * Initial release (Closes: #661111)
+
+ -- Laszlo Kajan <lkajan@rostlab.org>  Fri, 24 Feb 2012 10:38:57 +0100
+
