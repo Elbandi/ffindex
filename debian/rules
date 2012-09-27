@@ -4,7 +4,7 @@
 #export DH_VERBOSE=1
 
 %:
-	dh $@ --parallel
+	dh $@ --parallel --with quilt
 
 FFMANPAGES = ffindex_apply.1 ffindex_build.1 ffindex_from_fasta.1 ffindex_get.1 ffindex_modify.1
 .PHONY: ffmanpages

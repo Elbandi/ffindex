@@ -3,7 +3,7 @@ Section: science
 Priority: extra
 Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
 Uploaders: Laszlo Kajan <lkajan@rostlab.org>
-Build-Depends: debhelper (>= 8.0.0), help2man
+Build-Depends: debhelper (>= 7.4.0), help2man, quilt
 Standards-Version: 3.9.3
 Homepage: http://pubshare.genzentrum.lmu.de/scientific_computing/software/ffindex/
 Vcs-Svn: svn://svn.debian.org/debian-med/trunk/packages/ffindex/trunk/
