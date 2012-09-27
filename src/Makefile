@@ -14,21 +14,23 @@ endif
 
 #-Wl,--version-script=libffindex.map
 
+OBJECTS=ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so ffindex_unpack
+
 ifdef HAVE_MPI
-all: ffindex_apply_mpi ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so
-else
-all: ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so
+OBJECTS+=ffindex_apply_mpi
 endif
+
+all: $(OBJECTS)
 
 ffindex.o: ffindex.c ffindex.h ffutil.h
 
 ffindex_apply: $(FFINDEX_OBJECTS) ffindex_apply.o ffindex.h
 
 ffindex_apply_mpi: $(FFINDEX_OBJECTS) ffindex_apply_mpi.o ffindex.h
-	mpicc $(CFLAGS) -I $(MPI_INCLUDE) -o $@  ffindex_apply_mpi.o $(LDFLAGS)
+	mpicc $(CFLAGS) -o $@  ffindex_apply_mpi.o $(LDFLAGS)
 
 ffindex_apply_mpi.o: ffindex_apply_mpi.c ffindex.h
-	mpicc $(CFLAGS) -I $(MPI_INCLUDE) -c ffindex_apply_mpi.c -o $@ 
+	mpicc $(CFLAGS) -c ffindex_apply_mpi.c -o $@ 
 
 ffindex_from_fasta: $(FFINDEX_OBJECTS) ffindex_from_fasta.o ffindex.h
 	$(CC) -o $@ ffindex_from_fasta.o $(LDFLAGS) -L. -lffindex
@@ -41,6 +43,9 @@ ffindex_build: $(FFINDEX_OBJECTS) ffindex_build.o ffindex.h
 
 ffindex_modify: $(FFINDEX_OBJECTS) ffindex_modify.o ffindex.h
 	$(CC) -o $@ ffindex_modify.o $(LDFLAGS) -L. -lffindex
+
+ffindex_unpack: $(FFINDEX_OBJECTS) ffindex_unpack.o ffindex.h
+	$(CC) -o $@ ffindex_unpack.o $(LDFLAGS) -L. -lffindex
 
 libffindex.so.0.1: ffindex.o ffutil.o
 	$(CC) -Wl,-z,defs -shared -Wl,-soname,libffindex.so.0.1 -o libffindex.so.0.1 ffindex.o ffutil.o -lc
@@ -83,6 +88,7 @@ install:
 	install ffindex_modify $(INSTALL_DIR)/bin/ffindex_modify
 	install ffindex_from_fasta $(INSTALL_DIR)/bin/ffindex_from_fasta
 	install ffindex_apply $(INSTALL_DIR)/bin/ffindex_apply
+	install ffindex_unpack $(INSTALL_DIR)/bin/ffindex_unpack
 	install libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.0.1
 	install libffindex.a $(INSTALL_DIR)/$(libdir)/libffindex.a
 	ln -sf libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
