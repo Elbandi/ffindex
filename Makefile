@@ -6,15 +6,11 @@ else
 MFILE=Makefile
 endif
 
-.PHONY: clean install deinstall clean
 all:
-	$(MAKE) -C src -f $(MFILE)
+	$(MAKE) -C src -f $(MFILE) $@
 
-install:
-	$(MAKE) -C src install
+%:
+	$(MAKE) -C src -f $(MFILE) $@
 
-deinstall:
-	$(MAKE) -C src deinstall
-
-clean:
-	$(MAKE) -C src clean
+release:
+	hg archive -t tgz ffindex-`cat VERSION`.tar.gz

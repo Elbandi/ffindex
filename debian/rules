@@ -6,7 +6,7 @@
 %:
 	dh $@ --parallel --with quilt
 
-FFMANPAGES = ffindex_apply.1 ffindex_build.1 ffindex_from_fasta.1 ffindex_get.1 ffindex_modify.1
+FFMANPAGES = ffindex_apply.1 ffindex_build.1 ffindex_from_fasta.1 ffindex_get.1 ffindex_modify.1 ffindex_unpack.1
 .PHONY: ffmanpages
 ffmanpages: $(FFMANPAGES)
 BINNAMES =	\
@@ -15,6 +15,7 @@ BINNAMES =	\
 		ffindex_from_fasta="populate index from FASTA file";\
 		ffindex_get="retrieve entries from file index";\
 		ffindex_modify="modify file index entries";\
+		ffindex_unpack="unpack all entries from file";\
 
 .PHONY: override_dh_installman
 override_dh_installman: $(FFMANPAGES)
