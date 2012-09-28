@@ -203,6 +203,10 @@ char* ffindex_mmap_data(FILE *file, size_t* size)
   return (char*)mmap(NULL, *size, PROT_READ, MAP_PRIVATE, fd, 0);
 }
 
+int ffindex_munmap_data(char *data, size_t size)
+{
+  return munmap(data, size);
+}
 
 static int ffindex_compare_entries_by_name(const void *pentry1, const void *pentry2)
 {   
