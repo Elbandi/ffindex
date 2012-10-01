@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 
 Package: ffindex
 Architecture: any
-Depends: libffindex0 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libffindex1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: simple index/database for huge amounts of small files
  FFindex is a very simple index/database for huge amounts of small files. The
  files are stored concatenated in one big data file, separated by '\0'. A
@@ -22,7 +22,7 @@ Description: simple index/database for huge amounts of small files
  .
  This package provides the executables.
 
-Package: libffindex0
+Package: libffindex1
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -35,10 +35,10 @@ Description: library for simple index/database for huge amounts of small files
  .
  This package provides the shared library.
 
-Package: libffindex0-dev
+Package: libffindex1-dev
 Architecture: any
 Section: libdevel
-Depends: libffindex0 (= ${binary:Version}), ${misc:Depends}
+Depends: libffindex1 (= ${binary:Version}), ${misc:Depends}
 Provides: libffindex-dev
 Description: library for simple index/database for huge amounts of small files (development)
  FFindex is a very simple index/database for huge amounts of small files. The
@@ -53,7 +53,7 @@ Description: library for simple index/database for huge amounts of small files (
 Package: ffindex-dbg
 Architecture: any
 Section: debug
-Depends: ffindex (= ${binary:Version}), libffindex0 (= ${binary:Version}), ${misc:Depends}
+Depends: ffindex (= ${binary:Version}), libffindex1 (= ${binary:Version}), ${misc:Depends}
 Description: simple index/database for huge amounts of small files (debug)
  FFindex is a very simple index/database for huge amounts of small files. The
  files are stored concatenated in one big data file, separated by '\0'. A

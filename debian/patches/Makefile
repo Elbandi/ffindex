@@ -21,13 +21,13 @@ Forwarded: yes
 +CC=gcc
  CFLAGS+=-std=c99 -O2 -g -fPIC -Wall -pedantic
 -LDFLAGS=-lffindex -L.
-+SOCURRENT=0
++SOCURRENT=1
 +SOVERSION=$(SOCURRENT).1.0
  ifdef FFINDEX_STATIC
  	LDFLAGS+=-static
  	FFINDEX_OBJECTS=libffindex.a
  else
--	FFINDEX_OBJECTS=libffindex.so libffindex.so.0.1 
+-	FFINDEX_OBJECTS=libffindex.so libffindex.so.1.1 
 +	FFINDEX_OBJECTS=libffindex.so libffindex.so.$(SOVERSION)
  endif
  
@@ -62,13 +62,13 @@ Forwarded: yes
 -	$(CC) -o $@ ffindex_unpack.o $(LDFLAGS) -L. -lffindex
 +	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ ffindex_unpack.o $(LDFLAGS) -L. -lffindex
  
--libffindex.so.0.1: ffindex.o ffutil.o
--	$(CC) -Wl,-z,defs -shared -Wl,-soname,libffindex.so.0.1 -o libffindex.so.0.1 ffindex.o ffutil.o -lc
+-libffindex.so.1.1: ffindex.o ffutil.o
+-	$(CC) -Wl,-z,defs -shared -Wl,-soname,libffindex.so.1.1 -o libffindex.so.1.1 ffindex.o ffutil.o -lc
 +libffindex.so.$(SOVERSION): ffindex.o ffutil.o
 +	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -Wl,-z,defstack -shared -Wl,-soname,libffindex.so.$(SOCURRENT) -o libffindex.so.$(SOVERSION) ffindex.o ffutil.o -lc
  
--libffindex.so: libffindex.so.0.1
--	ln -sf libffindex.so.0.1 libffindex.so
+-libffindex.so: libffindex.so.1.1
+-	ln -sf libffindex.so.1.1 libffindex.so
 +libffindex.so: libffindex.so.$(SOVERSION)
 +	ln -sf libffindex.so.$(SOVERSION) libffindex.so.$(SOCURRENT)
 +	ln -sf libffindex.so.$(SOVERSION) libffindex.so
@@ -85,7 +85,7 @@ Forwarded: yes
  	LD_LIBRARY_PATH=".:$(LD_LIBRARY_PATH)" zsh -c "time ./ffindex_get  ../test_big/nr20_11Jan10_a3m_db ../test_big/nr20_11Jan10_a3m_db.ffindex BABBAMIBA.a3m KARDUZEBA.a3m HARPAQIBA.a3m WOQQATEBA.a3m BEBRAQIBA.a3m GIRSAKEBA.a3m NAQTIFIBA.a3m BIWCIQABA.a3m > /dev/null"
  
  clean:
--	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.0.1 ffindex_modify ffindex_modify.o \
+-	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o \
 +	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.$(SOCURRENT) libffindex.so.$(SOVERSION) ffindex_modify ffindex_modify.o \
  		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
  
@@ -98,10 +98,10 @@ Forwarded: yes
  	install ffindex_from_fasta $(INSTALL_DIR)/bin/ffindex_from_fasta
  	install ffindex_apply $(INSTALL_DIR)/bin/ffindex_apply
  	install ffindex_unpack $(INSTALL_DIR)/bin/ffindex_unpack
--	install libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.0.1
+-	install libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.1.1
 +	install libffindex.so.$(SOVERSION) $(INSTALL_DIR)/$(libdir)/libffindex.so.$(SOVERSION)
  	install libffindex.a $(INSTALL_DIR)/$(libdir)/libffindex.a
--	ln -sf libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
+-	ln -sf libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
 +	ln -sf libffindex.so.$(SOVERSION) $(INSTALL_DIR)/$(libdir)/libffindex.so.$(SOCURRENT)
 +	ln -sf libffindex.so.$(SOVERSION) $(INSTALL_DIR)/$(libdir)/libffindex.so
  	install ffindex.h $(INSTALL_DIR)/include/ffindex.h

@@ -12,20 +12,20 @@ ext/fmemopen.o: ext/fmemopen.c
 
 ffindex.o: ffindex.c ffindex.h ffutil.h
 
-ffindex_get: libffindex.so libffindex.so.0.1 ffindex_get.o
+ffindex_get: libffindex.so libffindex.so.1.1 ffindex_get.o
 	$(CC) $(CFLAGS) -L. -lffindex  ffindex_get.o -o $@ 
 
-ffindex_build: libffindex.so libffindex.so.0.1 ffindex_build.o
+ffindex_build: libffindex.so libffindex.so.1.1 ffindex_build.o
 	$(CC) $(CFLAGS) -L. -lffindex ffindex_build.o -o $@ 
 
-ffindex_modify: libffindex.so libffindex.so.0.1 ffindex_modify.o
+ffindex_modify: libffindex.so libffindex.so.1.1 ffindex_modify.o
 	$(CC) $(CFLAGS) -L. -lffindex ffindex_modify.o -o $@ 
 
-libffindex.so.0.1: ffindex.o ext/fmemopen.o ffutil.o
-	$(CC) $(LDFLAGS) -shared -o libffindex.so.0.1 ext/fmemopen.o ffindex.o ffutil.o -lc
+libffindex.so.1.1: ffindex.o ext/fmemopen.o ffutil.o
+	$(CC) $(LDFLAGS) -shared -o libffindex.so.1.1 ext/fmemopen.o ffindex.o ffutil.o -lc
 
-libffindex.so: libffindex.so.0.1
-	ln -sf libffindex.so.0.1 libffindex.so
+libffindex.so: libffindex.so.1.1
+	ln -sf libffindex.so.1.1 libffindex.so
 
 libffindex.a: ffindex.o ffutil.o
 	ar rcs libffindex.a ffutil.o ffindex.o  ext/fmemopen.o
@@ -38,7 +38,7 @@ time:
 	LD_LIBRARY_PATH=".:$(LD_LIBRARY_PATH)" zsh -c "time ./ffindex_get  ../test_big/nr20_11Jan10_a3m_db ../test_big/nr20_11Jan10_a3m_db.ffindex BABBAMIBA.a3m KARDUZEBA.a3m HARPAQIBA.a3m WOQQATEBA.a3m BEBRAQIBA.a3m GIRSAKEBA.a3m NAQTIFIBA.a3m BIWCIQABA.a3m > /dev/null"
 
 clean:
-	rm -f ffindex.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.0.1
+	rm -f ffindex.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
@@ -46,6 +46,6 @@ install:
 	mkdir -p $(INSTALL_DIR)/include
 	install ffindex_get $(INSTALL_DIR)/bin/ffindex_get
 	install ffindex_build $(INSTALL_DIR)/bin/ffindex_build
-	install libffindex.so.0.1 $(INSTALL_DIR)/lib/libffindex.so.0.1
-	ln -sf libffindex.so.0.1 $(INSTALL_DIR)/lib/libffindex.so
+	install libffindex.so.1.1 $(INSTALL_DIR)/lib/libffindex.so.1.1
+	ln -sf libffindex.so.1.1 $(INSTALL_DIR)/lib/libffindex.so
 	install ffindex.h $(INSTALL_DIR)/include/ffindex.h

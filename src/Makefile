@@ -9,7 +9,7 @@ ifdef FFINDEX_STATIC
 	LDFLAGS+=-static
 	FFINDEX_OBJECTS=libffindex.a
 else
-	FFINDEX_OBJECTS=libffindex.so libffindex.so.0.1 
+	FFINDEX_OBJECTS=libffindex.so libffindex.so.1.1 
 endif
 
 #-Wl,--version-script=libffindex.map
@@ -47,11 +47,11 @@ ffindex_modify: $(FFINDEX_OBJECTS) ffindex_modify.o ffindex.h
 ffindex_unpack: $(FFINDEX_OBJECTS) ffindex_unpack.o ffindex.h
 	$(CC) -o $@ ffindex_unpack.o $(LDFLAGS) -L. -lffindex
 
-libffindex.so.0.1: ffindex.o ffutil.o
-	$(CC) -Wl,-z,defs -shared -Wl,-soname,libffindex.so.0.1 -o libffindex.so.0.1 ffindex.o ffutil.o -lc
+libffindex.so.1.1: ffindex.o ffutil.o
+	$(CC) -Wl,-z,defs -shared -Wl,-soname,libffindex.so.1.1 -o libffindex.so.1.1 ffindex.o ffutil.o -lc
 
-libffindex.so: libffindex.so.0.1
-	ln -sf libffindex.so.0.1 libffindex.so
+libffindex.so: libffindex.so.1.1
+	ln -sf libffindex.so.1.1 libffindex.so
 
 libffindex.a: ffindex.o ffutil.o
 	ar rcs libffindex.a ffutil.o ffindex.o 
@@ -76,7 +76,7 @@ time:
 	LD_LIBRARY_PATH=".:$(LD_LIBRARY_PATH)" zsh -c "time ./ffindex_get  ../test_big/nr20_11Jan10_a3m_db ../test_big/nr20_11Jan10_a3m_db.ffindex BABBAMIBA.a3m KARDUZEBA.a3m HARPAQIBA.a3m WOQQATEBA.a3m BEBRAQIBA.a3m GIRSAKEBA.a3m NAQTIFIBA.a3m BIWCIQABA.a3m > /dev/null"
 
 clean:
-	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.0.1 ffindex_modify ffindex_modify.o \
+	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o \
 		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
 
 install:
@@ -89,9 +89,9 @@ install:
 	install ffindex_from_fasta $(INSTALL_DIR)/bin/ffindex_from_fasta
 	install ffindex_apply $(INSTALL_DIR)/bin/ffindex_apply
 	install ffindex_unpack $(INSTALL_DIR)/bin/ffindex_unpack
-	install libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.0.1
+	install libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.1.1
 	install libffindex.a $(INSTALL_DIR)/$(libdir)/libffindex.a
-	ln -sf libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
+	ln -sf libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
 	install ffindex.h $(INSTALL_DIR)/include/ffindex.h
 	install ffutil.h $(INSTALL_DIR)/include/ffutil.h
 ifdef HAVE_MPI
@@ -100,7 +100,7 @@ endif
 
 deinstall:
 	rm -f $(INSTALL_DIR)/bin/ffindex_get $(INSTALL_DIR)/bin/ffindex_build $(INSTALL_DIR)/bin/ffindex_modify \
-		$(INSTALL_DIR)/$(libdir)/libffindex.so.0.1 $(INSTALL_DIR)/$(libdir)/libffindex.a \
+		$(INSTALL_DIR)/$(libdir)/libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.a \
 		$(INSTALL_DIR)/$(libdir)/libffindex.so $(INSTALL_DIR)/include/ffindex.h $(INSTALL_DIR)/include/ffutil.h\
 		$(INSTALL_DIR)/bin/ffindex_from_fasta
 	rmdir $(INSTALL_DIR)/bin || true
