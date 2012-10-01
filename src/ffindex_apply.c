@@ -35,7 +35,7 @@ int main(int argn, char **argv)
   {
     fprintf(stderr, "USAGE: %s DATA_FILENAME INDEX_FILENAME PROGRAM [PROGRAM_ARGS]*\n"
                     "\nDesigned and implemented by Andy Hauser <hauser@genzentrum.lmu.de>.\n",
-                    argv[0]);
+                    basename(argv[0]));
     return -1;
   }
   char *data_filename  = argv[1];

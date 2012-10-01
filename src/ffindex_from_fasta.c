@@ -33,7 +33,7 @@ void usage(char *program_name)
 {
     fprintf(stderr, "USAGE: %s -v | [-s] data_filename index_filename fasta_filename\n"
                     "\t-s\tsort index file\n"
-                    "\nDesigned and implemented by Andreas W. Hauser <hauser@genzentrum.lmu.de>.\n", program_name);
+                    "\nDesigned and implemented by Andreas W. Hauser <hauser@genzentrum.lmu.de>.\n", basename(program_name));
 }
 
 int main(int argn, char **argv)

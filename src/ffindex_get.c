@@ -27,7 +27,7 @@ void usage(char* program_name)
     fprintf(stderr, "USAGE: %s data_filename index_filename entry name(s)\n"
                     "-n\tuse index of entry instead of entry name\n"
                     "\nDesigned and implemented by Andy Hauser <hauser@genzentrum.lmu.de>.\n",
-                    program_name);
+                    basename(program_name));
 }
 
 int main(int argn, char **argv)

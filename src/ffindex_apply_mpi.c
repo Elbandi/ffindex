@@ -186,7 +186,7 @@ int main(int argn, char **argv)
     fprintf(stderr, "Not enough arguments %d.\n", optind - argn);
     fprintf(stderr, "USAGE: %s -d DATA_FILENAME_OUT -i INDEX_FILENAME_OUT DATA_FILENAME INDEX_FILENAME -- PROGRAM [PROGRAM_ARGS]*\n"
                     "\nDesigned and implemented by Andy Hauser <hauser@genzentrum.lmu.de>.\n",
-                    argv[0]);
+                    basename(argv[0]));
     return -1;
   }
   read_buffer = malloc(400 * 1024 * 1024);
