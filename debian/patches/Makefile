@@ -87,8 +87,7 @@ Forwarded: yes
  clean:
 -	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.0.1 ffindex_modify ffindex_modify.o \
 +	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.$(SOCURRENT) libffindex.so.$(SOVERSION) ffindex_modify ffindex_modify.o \
--		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o
-+		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
+ 		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
  
 +distclean: clean
 +
