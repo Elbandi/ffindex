@@ -20,6 +20,7 @@
 #define _FFINDEX_H 1
 
 #include <stdio.h>
+#include <time.h>
 
 #define FFINDEX_VERSION 0.980
 #define FFINDEX_MAX_INDEX_ENTRIES_DEFAULT 40000000
@@ -30,6 +31,7 @@ enum ffindex_type { PLAIN_FILE, SORTED_FILE, SORTED_ARRAY, TREE };
 typedef struct ffindex_entry {
   size_t offset;
   size_t length;
+  time_t mtime;
   char name[FFINDEX_MAX_ENTRY_NAME_LENTH];
 } ffindex_entry_t;
 

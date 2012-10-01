@@ -61,7 +61,7 @@ int ffindex_insert_memory(FILE *data_file, FILE *index_file, size_t *offset, cha
       goto EXCEPTION_ffindex_insert_memory;
 
     /* write index entry */
-    fprintf(index_file, "%s\t%zd\t%zd\n", name, offset_before, *offset - offset_before);
+    fprintf(index_file, "%s\t%zd\t%zd\t%d\n", name, offset_before, *offset - offset_before, 0);
 
     return myerrno;
 
@@ -145,6 +145,17 @@ int ffindex_insert_file(FILE *data_file, FILE *index_file, size_t *offset, const
 int ffindex_insert_filestream(FILE *data_file, FILE *index_file, size_t *offset, FILE* file, char *name)
 {
     int myerrno = 0;
+    struct stat sb;
+    time_t mtime;
+    int fd = fileno(file);
+    if (fd != -1 && fstat(fileno(file), &sb) == 0)
+    {
+        mtime = sb.st_mtime;
+    }
+    else
+    {
+        mtime = 0;
+    }
     /* copy and paste file to data file */
     char buffer[FFINDEX_BUFFER_SIZE];
     size_t offset_before = *offset;
@@ -168,7 +179,7 @@ int ffindex_insert_filestream(FILE *data_file, FILE *index_file, size_t *offset,
       goto EXCEPTION_ffindex_insert_file;
 
     /* write index entry */
-    fprintf(index_file, "%s\t%zd\t%zd\n", name, offset_before, *offset - offset_before);
+    fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", name, offset_before, *offset - offset_before, (long long int)mtime);
 
     if(ferror(file) != 0)
       goto EXCEPTION_ffindex_insert_file;
@@ -258,6 +269,8 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
     index->entries[i].offset = strtol(d, &end, 10);
     d = end;
     index->entries[i].length  = strtol(d, &end, 10);
+    d = end;
+    index->entries[i].mtime  = strtol(d, &end, 10);
     /*
      * eat the remaining chars from line, so current version of library is
      * forward compatible with future versions, if new field is added
@@ -352,7 +365,7 @@ int ffindex_write(ffindex_index_t* index, FILE* index_file)
   for(size_t i = 0; i < index->n_entries; i++)
   {
     ffindex_entry_t ffindex_entry = index->entries[i];
-    if(fprintf(index_file, "%s\t%zd\t%zd\n", ffindex_entry.name, ffindex_entry.offset, ffindex_entry.length) < 0)
+    if(fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", ffindex_entry.name, ffindex_entry.offset, ffindex_entry.length, (long long int)ffindex_entry.mtime) < 0)
       return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -461,7 +474,7 @@ int ffindex_tree_write(ffindex_index_t* index, FILE* index_file)
       case postorder:
       case leaf:
         entry = *(ffindex_entry_t **) node;
-        if(fprintf(index_file, "%s\t%zd\t%zd\n", entry->name, entry->offset, entry->length) < 0)
+        if(fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", entry->name, entry->offset, entry->length, (long long int)entry->mtime) < 0)
           ret = EXIT_FAILURE;
         break;
     }                                        
