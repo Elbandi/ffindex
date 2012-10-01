@@ -49,7 +49,7 @@ void usage(char *program_name)
                     "\n\tOops, forgot to sort it (-s) so do it afterwards:\n"
                     "\t\t$ ffindex_build -as foo.ffdata foo.ffindex\n"
                     "\nNOTE:\n"
-                    "\tMaximum key/filename length is %d and maximum entries are by default %d\n"
+                    "\tMaximum entries are by default %d\n"
                     "\tThis can be changed in the sources.\n"
                     "\nDesigned and implemented by Andreas W. Hauser <hauser@genzentrum.lmu.de>.\n",
                     basename(program_name), MAX_FILENAME_LIST_FILES, FFINDEX_MAX_ENTRY_NAME_LENTH, FFINDEX_MAX_INDEX_ENTRIES_DEFAULT);
@@ -183,6 +183,10 @@ int main(int argn, char **argv)
         ffindex_entry_t *entry = ffindex_get_entry_by_index(index_to_add, entry_i);
         ffindex_insert_memory(data_file, index_file, &offset, ffindex_get_data_by_entry(data_to_add, entry), entry->length - 1, entry->name); // skip \0 suffix
       }
+      ffindex_munmap_data(data_to_add, data_size);
+      ffindex_index_free(index_to_add);
+      fclose(data_file_to_add);
+      fclose(index_file_to_add);
     }
   }
 
@@ -225,8 +229,10 @@ int main(int argn, char **argv)
     index_file = fopen(index_filename, "w");
     if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
     err += ffindex_write(index, index_file);
+    ffindex_index_free(index);
   }
 
+  fclose(index_file);
   return err;
 }
 

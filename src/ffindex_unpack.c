@@ -58,6 +58,11 @@ int main(int argn, char **argv)
     exit(EXIT_FAILURE);
   }
 
+  ffindex_munmap_data(index->index_data, index->index_data_size);
+  index->index_data = NULL;
+  index->index_data_size = 0;
+  fclose(index_file);
+
   if(chdir(out_dir) < 0){ fferror_print(__FILE__, __LINE__, argv[0], out_dir);  exit(EXIT_FAILURE); }
 
   size_t range_start = 0;
@@ -81,6 +86,10 @@ int main(int argn, char **argv)
 
     fclose(output_file);
   }
+
+  ffindex_index_free(index);
+  ffindex_munmap_data(data, data_size);
+  fclose(data_file);
 
   return 0;
 }

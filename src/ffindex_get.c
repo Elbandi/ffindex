@@ -70,6 +70,11 @@ int main(int argn, char **argv)
     exit(EXIT_FAILURE);
   }
 
+  ffindex_munmap_data(index->index_data, index->index_data_size);
+  index->index_data = NULL;
+  index->index_data_size = 0;
+  fclose(index_file);
+
   if(by_index)
   {
     for(int i = optind; i < argn; i++)
@@ -116,6 +121,10 @@ int main(int argn, char **argv)
          */
     }
   }
+
+  ffindex_index_free(index);
+  ffindex_munmap_data(data, data_size);
+  fclose(data_file);
 
   return 0;
 }

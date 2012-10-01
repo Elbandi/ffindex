@@ -220,17 +220,17 @@ int ffindex_munmap_data(char *data, size_t size)
 }
 
 static int ffindex_compare_entries_by_name(const void *pentry1, const void *pentry2)
-{   
+{
   ffindex_entry_t* entry1 = (ffindex_entry_t*)pentry1;
   ffindex_entry_t* entry2 = (ffindex_entry_t*)pentry2;
-  return strncmp(entry1->name, entry2->name, FFINDEX_MAX_ENTRY_NAME_LENTH);
+  return strcmp(entry1->name, entry2->name);
 }
 
 
 ffindex_entry_t* ffindex_bsearch_get_entry(ffindex_index_t *index, char *name)
 {
   ffindex_entry_t search;
-  strncpy(search.name, name, FFINDEX_MAX_ENTRY_NAME_LENTH);
+  search.name = name;
   return (ffindex_entry_t*)bsearch(&search, index->entries, index->n_entries, sizeof(ffindex_entry_t), ffindex_compare_entries_by_name);
 }
 
@@ -262,10 +262,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
   /* Faster than scanf per line */
   for(i = 0; d < (index->index_data + index->index_data_size); i++)
   {
-    int p;
-    for(p = 0; *d != '\t'; d++)
-      index->entries[i].name[p++] = *d;
-    index->entries[i].name[p] = '\0';
+    char *p;
+    for(p = d; *p != '\t'; p++);
+    index->entries[i].name = strndup(d, p - d);
+    d = p + 1;
     index->entries[i].offset = strtol(d, &end, 10);
     d = end;
     index->entries[i].length  = strtol(d, &end, 10);
@@ -286,6 +286,17 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
 
   return index;
 }
+
+
+void ffindex_index_free(ffindex_index_t *index)
+{
+    for (size_t n = 0; n < index->n_entries; n++) {
+        free(index->entries[n].name);
+        index->entries[n].name = NULL;
+    }
+    free(index);
+}
+
 
 ffindex_entry_t* ffindex_get_entry_by_index(ffindex_index_t *index, size_t entry_index)
 {
@@ -382,7 +393,7 @@ ffindex_index_t* ffindex_unlink_entries(ffindex_index_t* index, char** sorted_na
     /* walk index entries */
     for(; i >= 0; i--)
     {
-      int cmp = strncmp(name_to_unlink, index->entries[i].name, FFINDEX_MAX_ENTRY_NAME_LENTH);
+      int cmp = strcmp(name_to_unlink, index->entries[i].name);
       if(cmp == 0) /* found entry */
       {
         /* Move entries after the unlinked ones to close the gap */
@@ -426,7 +437,7 @@ ffindex_index_t* ffindex_unlink(ffindex_index_t* index, char* name_to_unlink)
 ffindex_entry_t *ffindex_tree_get_entry(ffindex_index_t* index, char* name)
 {
   ffindex_entry_t search;
-  strncpy(search.name, name, FFINDEX_MAX_ENTRY_NAME_LENTH);
+  search.name = name;
   return (ffindex_entry_t *)tfind((const void *)&search, &index->tree_root, ffindex_compare_entries_by_name);
 }
 
@@ -439,7 +450,7 @@ ffindex_index_t* ffindex_tree_unlink(ffindex_index_t* index, char* name_to_unlin
     return NULL;
   }
   ffindex_entry_t search;
-  strncpy(search.name, name_to_unlink, FFINDEX_MAX_ENTRY_NAME_LENTH);
+  search.name = name_to_unlink;
   tdelete((const void *)&search, &index->tree_root, ffindex_compare_entries_by_name);
   return index;
 }
