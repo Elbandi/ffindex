@@ -258,6 +258,11 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
     index->entries[i].offset = strtol(d, &end, 10);
     d = end;
     index->entries[i].length  = strtol(d, &end, 10);
+    /*
+     * eat the remaining chars from line, so current version of library is
+     * forward compatible with future versions, if new field is added
+     */
+    while (*end != '\n') end++;
     d = end + 1; /* +1 for newline */
   }
 
