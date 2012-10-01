@@ -30,7 +30,7 @@ Forwarded: yes
    ffindex_entry_t entries[]; /* This array is as big as the excess memory allocated for this struct. */
  } ffindex_index_t;
  
-+inline size_t ffindex_max_index_entries(){ char *FMIE = getenv("FFINDEX_MAX_INDEX_ENTRIES"); if( FMIE ) { return atol( FMIE ); } else { return FFINDEX_MAX_INDEX_ENTRIES_DEFAULT; } }
++inline static size_t ffindex_max_index_entries(){ char *FMIE = getenv("FFINDEX_MAX_INDEX_ENTRIES"); if( FMIE ) { return atol( FMIE ); } else { return FFINDEX_MAX_INDEX_ENTRIES_DEFAULT; } }
 +
  int ffindex_insert_memory(FILE *data_file, FILE *index_file, size_t *offset, char *from_start, size_t from_length, char *name);
  

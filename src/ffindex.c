@@ -235,11 +235,11 @@ ffindex_entry_t* ffindex_bsearch_get_entry(ffindex_index_t *index, char *name)
 }
 
 
-ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
+ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
 {
-  if(num_max_entries == 0)
-    num_max_entries = FFINDEX_MAX_INDEX_ENTRIES_DEFAULT;
-  size_t nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * num_max_entries);
+  if(num_start_entries == 0)
+    num_start_entries = 2;
+  size_t nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * num_start_entries);
   ffindex_index_t *index = (ffindex_index_t *)malloc(nbytes);
   if(index == NULL)
   {
@@ -247,7 +247,7 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
     fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
     return NULL;
   }
-  index->num_max_entries = num_max_entries;
+  index->num_max_entries = num_start_entries;
 
   index->file = index_file;
   index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));
@@ -263,6 +263,18 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_max_entries)
   for(i = 0; d < (index->index_data + index->index_data_size); i++)
   {
     char *p;
+    if (i == index->num_max_entries) {
+        nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * index->num_max_entries * 2);
+        ffindex_index_t *tmp = (ffindex_index_t *)realloc(index, nbytes);
+        if(tmp == NULL)
+        {
+          fprintf(stderr, "Failed to allocate %ld bytes\n", nbytes);
+          fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+          break;
+        }
+        index = tmp;
+        index->num_max_entries *= 2;
+    }
     for(p = d; *p != '\t'; p++);
     index->entries[i].name = strndup(d, p - d);
     d = p + 1;
