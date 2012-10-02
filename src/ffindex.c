@@ -319,6 +319,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
     warn("index with 0 entries");
 #endif
 
+  ffindex_munmap_data(index->index_data, index->index_data_size);
+  index->index_data_size = 0;
+  index->index_data = NULL;
+
   return index;
 }
 
