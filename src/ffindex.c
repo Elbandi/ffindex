@@ -33,6 +33,7 @@
 
 /* XXX Use page size? */
 #define FFINDEX_BUFFER_SIZE 4096
+//#define DEBUG
 
 char* ffindex_copyright_text = "Designed and implemented by Andy Hauser <hauser@genzentrum.lmu.de>.";
 
@@ -45,31 +46,37 @@ char* ffindex_copyright()
 /* Insert a memory chunk (string even without \0) into ffindex */
 int ffindex_insert_memory(FILE *data_file, FILE *index_file, size_t *offset, char *from_start, size_t from_length, char *name)
 {
-    int myerrno = 0;
     size_t offset_before = *offset;
     size_t write_size = fwrite(from_start, sizeof(char), from_length, data_file);
     *offset += write_size;
     if(from_length != write_size)
+    {
+#ifdef DEBUG
       fferror_print(__FILE__, __LINE__, __func__, name);
+#endif
+      return FFINDEX_ERROR;
+    }
 
     /* Seperate by '\0' and thus also make sure at least one byte is written */
     char buffer[1] = {'\0'};
     if(fwrite(buffer, sizeof(char), 1, data_file) != 1)
-      perror("ffindex_insert_memory");
+    {
+#ifdef DEBUG
+      fferror_print(__FILE__, __LINE__, __func__, name);
+#endif
+      return FFINDEX_ERROR;
+    }
     *offset += 1;
-    if(ferror(data_file) != 0)
-      goto EXCEPTION_ffindex_insert_memory;
 
     /* write index entry */
-    fprintf(index_file, "%s\t%zd\t%zd\t%d\n", name, offset_before, *offset - offset_before, 0);
-
-    return myerrno;
-
-EXCEPTION_ffindex_insert_memory:
+    if (fprintf(index_file, "%s\t%zd\t%zd\t%d\n", name, offset_before, *offset - offset_before, 0) < 0)
     {
-      fferror_print(__FILE__, __LINE__, __func__, "");
-      return myerrno;
+#ifdef DEBUG
+        fferror_print(__FILE__, __LINE__, __func__, name);
+#endif
+        return FFINDEX_ERROR;
     }
+    return FFINDEX_OK;
 }
 
 
@@ -83,7 +90,7 @@ int ffindex_insert_list_file(FILE *data_file, FILE *index_file, size_t *start_of
 
   /* update return value */
   *start_offset = offset;
-  return 0;
+  return FFINDEX_OK;
 }
 
 
@@ -93,8 +100,10 @@ int ffindex_insert_dir(FILE *data_file, FILE *index_file, size_t *start_offset, 
   DIR *dir = opendir(input_dir_name);
   if(dir == NULL)
   {
+#ifdef DEBUG
     fferror_print(__FILE__, __LINE__, __func__, input_dir_name);
-    return -1;
+#endif
+    return FFINDEX_ERROR;
   }
 
   size_t input_dir_name_len = strlen(input_dir_name);
@@ -115,17 +124,25 @@ int ffindex_insert_dir(FILE *data_file, FILE *index_file, size_t *start_offset, 
     strncpy(path + input_dir_name_len, entry->d_name, NAME_MAX);
     struct stat sb;
     if(stat(path, &sb) == -1)
+    {
+#ifdef DEBUG
       fferror_print(__FILE__, __LINE__, __func__, path);
+#endif
+      continue;
+    }
     if(!S_ISREG(sb.st_mode))
       continue;
-    ffindex_insert_file(data_file, index_file, &offset, path, entry->d_name);
+    if (ffindex_insert_file(data_file, index_file, &offset, path, entry->d_name) != FFINDEX_OK)
+    {
+      closedir(dir);
+      return FFINDEX_ERROR;
+    }
   }
-  closedir(dir);
-
   /* update return value */
   *start_offset = offset;
 
-  return 0;
+  closedir(dir);
+  return FFINDEX_OK;
 }
 
 
@@ -144,7 +161,6 @@ int ffindex_insert_file(FILE *data_file, FILE *index_file, size_t *offset, const
 /* Insert one file by handle into ffindex */
 int ffindex_insert_filestream(FILE *data_file, FILE *index_file, size_t *offset, FILE* file, char *name)
 {
-    int myerrno = 0;
     struct stat sb;
     time_t mtime;
     int fd = fileno(file);
@@ -165,52 +181,59 @@ int ffindex_insert_filestream(FILE *data_file, FILE *index_file, size_t *offset,
       size_t write_size = fwrite(buffer, sizeof(char), read_size, data_file);
       *offset += write_size;
       if(read_size != write_size)
+      {
+#ifdef DEBUG
         fferror_print(__FILE__, __LINE__, __func__, name);
+#endif
+        return FFINDEX_ERROR;
+      }
     }
+#ifdef DEBUG
     if(ferror(file))
       warn("fread");
+#endif
 
     /* Seperate by '\0' and thus also make sure at least one byte is written */
     buffer[0] = '\0';
     if(fwrite(buffer, sizeof(char), 1, data_file) != 1)
+    {
+#ifdef DEBUG
       perror("ffindex_insert_filestream");
+#endif
+      return FFINDEX_ERROR;
+    }
     *offset += 1;
-    if(ferror(data_file) != 0)
-      goto EXCEPTION_ffindex_insert_file;
 
     /* write index entry */
-    fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", name, offset_before, *offset - offset_before, (long long int)mtime);
-
-    if(ferror(file) != 0)
-      goto EXCEPTION_ffindex_insert_file;
-
-    return myerrno;
-
-EXCEPTION_ffindex_insert_file:
+    if (fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", name, offset_before, *offset - offset_before, (long long int)mtime) < 0)
     {
-      fferror_print(__FILE__, __LINE__, __func__, "");
-      return myerrno;
+#ifdef DEBUG
+        fferror_print(__FILE__, __LINE__, __func__, name);
+#endif
+        return FFINDEX_ERROR;
     }
+    return FFINDEX_OK;
 }
 
 /* XXX not implemented yet */
 int ffindex_restore(FILE *data_file, FILE *index_file, char *input_dir_name)
 {
-  return -1;
+  return FFINDEX_ERROR;
 }
 
 
 char* ffindex_mmap_data(FILE *file, size_t* size)
 {
   struct stat sb;
-  fstat(fileno(file), &sb);
-  *size = sb.st_size;
   int fd =  fileno(file);
-  if(fd < 0)
+  if (fd == -1 || fstat(fd, &sb) != 0)
   {
-    fferror_print(__FILE__, __LINE__, __func__, "mmap failed");
+#ifdef DEBUG
+    fferror_print(__FILE__, __LINE__, __func__, "fstat failed");
+#endif
     return MAP_FAILED;
   }
+  *size = sb.st_size;
   return (char*)mmap(NULL, *size, PROT_READ, MAP_PRIVATE, fd, 0);
 }
 
@@ -243,8 +266,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
   ffindex_index_t *index = (ffindex_index_t *)malloc(nbytes);
   if(index == NULL)
   {
+#ifdef DEBUG
     fprintf(stderr, "Failed to allocate %ld bytes\n", nbytes);
     fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+#endif
     return NULL;
   }
   index->num_max_entries = num_start_entries;
@@ -252,7 +277,7 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
   index->file = index_file;
   index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));
   if(index->index_data_size == 0)
-    warn("Problem with data file. Is it empty or is another process readning it?");
+    return NULL;
   if(index->index_data == MAP_FAILED)
     return NULL;
   index->type = SORTED_ARRAY; /* XXX Assume a sorted file for now */
@@ -268,8 +293,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
         ffindex_index_t *tmp = (ffindex_index_t *)realloc(index, nbytes);
         if(tmp == NULL)
         {
+#ifdef DEBUG
           fprintf(stderr, "Failed to allocate %ld bytes\n", nbytes);
           fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+#endif
           break;
         }
         index = tmp;
@@ -293,8 +320,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
 
   index->n_entries = i;
 
+#ifdef DEBUG
   if(index->n_entries == 0)
     warn("index with 0 entries");
+#endif
 
   return index;
 }
@@ -389,9 +418,9 @@ int ffindex_write(ffindex_index_t* index, FILE* index_file)
   {
     ffindex_entry_t ffindex_entry = index->entries[i];
     if(fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", ffindex_entry.name, ffindex_entry.offset, ffindex_entry.length, (long long int)ffindex_entry.mtime) < 0)
-      return EXIT_FAILURE;
+      return FFINDEX_ERROR;
   }
-  return EXIT_SUCCESS;
+  return FFINDEX_OK;
 }
 
 
@@ -433,7 +462,9 @@ ffindex_index_t* ffindex_unlink(ffindex_index_t* index, char* name_to_unlink)
   ffindex_entry_t* entry = ffindex_bsearch_get_entry(index, name_to_unlink);
   if(entry == NULL)
   {
+#ifdef DEBUG
     fprintf(stderr, "Warning: could not find '%s'\n", name_to_unlink);
+#endif
     return index;
   }
   /* Move entries after the unlinked one to close the gap */
@@ -458,7 +489,9 @@ ffindex_index_t* ffindex_tree_unlink(ffindex_index_t* index, char* name_to_unlin
 {
   if(index->tree_root == NULL)
   {
+#ifdef DEBUG
     fferror_print(__FILE__, __LINE__, __func__, "tree is NULL");
+#endif
     return NULL;
   }
   ffindex_entry_t search;
@@ -484,7 +517,7 @@ ffindex_index_t* ffindex_index_as_tree(ffindex_index_t* index)
 
 int ffindex_tree_write(ffindex_index_t* index, FILE* index_file)
 {
-  int ret = EXIT_SUCCESS;
+  int ret = FFINDEX_OK;
   void action(const void *node, const VISIT which, const int depth)
   {
     ffindex_entry_t *entry;
@@ -498,9 +531,9 @@ int ffindex_tree_write(ffindex_index_t* index, FILE* index_file)
       case leaf:
         entry = *(ffindex_entry_t **) node;
         if(fprintf(index_file, "%s\t%zd\t%zd\t%lld\n", entry->name, entry->offset, entry->length, (long long int)entry->mtime) < 0)
-          ret = EXIT_FAILURE;
+          ret = FFINDEX_ERROR;
         break;
-    }                                        
+    }
   }
   twalk(index->tree_root, action);
   return ret;

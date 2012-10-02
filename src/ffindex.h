@@ -25,6 +25,9 @@
 #define FFINDEX_VERSION 0.980
 #define FFINDEX_MAX_INDEX_ENTRIES_DEFAULT 40000000
 
+#define FFINDEX_OK 0
+#define FFINDEX_ERROR -1
+
 enum ffindex_type { PLAIN_FILE, SORTED_FILE, SORTED_ARRAY, TREE };
 
 typedef struct ffindex_entry {
