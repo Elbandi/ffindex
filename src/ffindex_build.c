@@ -57,7 +57,7 @@ void usage(char *program_name)
 
 int main(int argn, char **argv)
 {
-  int append = 0, sort = 0, unlink = 0, version = 0;
+  int do_append = 0, do_sort = 0, do_unlink = 0, do_version = 0;
   int opt, err = EXIT_SUCCESS;
   char* list_filenames[MAX_FILENAME_LIST_FILES];
   char* list_ffindex_data[MAX_FILENAME_LIST_FILES];
@@ -70,7 +70,7 @@ int main(int argn, char **argv)
     switch (opt)
     {
       case 'a':
-        append = 1;
+        do_append = 1;
         break;
       case 'd':
         list_ffindex_data[list_ffindex_data_index++] = optarg;
@@ -82,10 +82,10 @@ int main(int argn, char **argv)
         list_filenames[list_filenames_index++] = optarg;
         break;
       case 's':
-        sort = 1;
+        do_sort = 1;
         break;
       case 'v':
-        version = 1;
+        do_version = 1;
         break;
       default:
         usage(argv[0]);
@@ -93,7 +93,7 @@ int main(int argn, char **argv)
     }
   }
 
-  if(version == 1)
+  if(do_version == 1)
   {
     /* Don't you dare running it on a platform where byte != 8 bits */
     printf("%s version %.2f, off_t = %zd bits\n", argv[0], FFINDEX_VERSION, sizeof(off_t) * 8);
@@ -106,7 +106,7 @@ int main(int argn, char **argv)
     return EXIT_FAILURE;
   }
 
-  if(append && unlink)
+  if(do_append && do_unlink)
   {
     fprintf(stderr, "ERROR: append (-a) and unlink (-u) are mutually exclusive\n");
     return EXIT_FAILURE;
@@ -125,7 +125,7 @@ int main(int argn, char **argv)
   size_t offset = 0;
 
   /* open index and data file, seek to end if needed */
-  if(append)
+  if(do_append)
   {
     data_file  = fopen(data_filename, "a");
     if( data_file == NULL) { perror(data_filename); return EXIT_FAILURE; }
@@ -215,7 +215,7 @@ int main(int argn, char **argv)
   fclose(data_file);
 
   /* Sort the index entries and write back */
-  if(sort)
+  if(do_sort)
   {
     rewind(index_file);
     ffindex_index_t* index = ffindex_index_parse(index_file, 0);
