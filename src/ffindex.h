@@ -19,8 +19,8 @@
 
 #define _FFINDEX_H 1
 
-#include <stdio.h>
-#include <time.h>
+#include <stdio.h> /* FILE */
+#include <time.h> /* time_t */
 
 #define FFINDEX_VERSION 0.980
 #define FFINDEX_MAX_INDEX_ENTRIES_DEFAULT 40000000

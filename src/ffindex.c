@@ -14,18 +14,12 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <limits.h>
-#include <libgen.h>
-#include <search.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <sys/mman.h> /* mmap, munmap */
+#include <sys/stat.h> /* stat, fstat */
+#include <sys/types.h> /* DIR */
+#include <dirent.h> /* opendir, readdir, closedir */
+#include <limits.h>  /* PATH_MAX */
+#include <search.h> /* tsearch, tfind, tdelete, twalk */
 
 #include "ext/fmemopen.h" /* For OS not yet implementing this new standard function */
 #include "ffutil.h"
