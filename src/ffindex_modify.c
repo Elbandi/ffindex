@@ -124,9 +124,12 @@ int main(int argn, char **argv)
     }
     else
     {
-      char** sorted_names_to_unlink = malloc(FFINDEX_MAX_INDEX_ENTRIES_DEFAULT * sizeof(char *));
-      if(sorted_names_to_unlink == NULL)
+      int names = 8;
+      char** sorted_names_to_unlink = malloc(names * sizeof(char *));
+      if(sorted_names_to_unlink == NULL) {
         fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+        return EXIT_FAILURE;
+      }
       /* For each list_file unlink all entries */
       if(list_filenames_index > 0)
         for(int i = 0; i < list_filenames_index; i++)
@@ -137,25 +140,55 @@ int main(int argn, char **argv)
 
           /* unlink entries in file, one per line */
           char path[PATH_MAX];
+          int y = 0;
           while(fgets(path, PATH_MAX, list_file) != NULL)
-            sorted_names_to_unlink[i++] = ffnchomp(strdup(path), strlen(path));
-          ffindex_unlink_entries(index, sorted_names_to_unlink, i);
+          {
+            if (y == names)
+            {
+              char** tmp = (char **)realloc(sorted_names_to_unlink, 2 * names * sizeof(char *));
+              if(tmp == NULL)
+              {
+                fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+                break;
+              }
+              names *= 2;
+              sorted_names_to_unlink = tmp;
+            }
+            sorted_names_to_unlink[y++] = ffnchomp(strdup(path), strlen(path));
+          }
+          qsort(sorted_names_to_unlink, y, sizeof(char *), (int(*)(const void*,const void*))strcmp);
+          ffindex_unlink_entries(index, sorted_names_to_unlink, y);
+          for(int x = 0; x < y; x++)
+          {
+            free(sorted_names_to_unlink[x]);
+          }
         }
 
       /* unlink entries specified by args */
       int y = 0;
       for(int i = optind; i < argn; i++, y++)
+      {
+        if (y == names)
+        {
+          char** tmp = (char **)realloc(sorted_names_to_unlink, 2 * names * sizeof(char *));
+          if(tmp == NULL)
+          {
+            fferror_print(__FILE__, __LINE__, __func__, "malloc failed");
+            break;
+          }
+          names *= 2;
+          sorted_names_to_unlink = tmp;
+        }
         sorted_names_to_unlink[y] = argv[i];
+      }
+      qsort(sorted_names_to_unlink, y, sizeof(char *), (int(*)(const void*,const void*))strcmp);
       ffindex_unlink_entries(index, sorted_names_to_unlink, y);
 
-      /* Sort the index entries and write back */
+      /* Sort the index entries */
       if(sort)
-      {
         ffindex_sort_index_file(index);
-        index_file = fopen(index_filename, "w");
-        if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
-        err += ffindex_write(index, index_file);
-      }
+
+      free(sorted_names_to_unlink);
     }
   }
 

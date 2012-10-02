@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include <sys/mman.h>
 
 #include "ffindex.h"
 #include "ffutil.h"
@@ -41,27 +41,25 @@ int main(int argn, char **argv)
   char *data_filename  = argv[1];
   char *index_filename = argv[2];
   char *out_dir = argv[3];
+  int err = EXIT_SUCCESS;
 
   FILE *data_file  = fopen(data_filename,  "r");
-  FILE *index_file = fopen(index_filename, "r");
+  if( data_file == NULL) { fferror_print(__FILE__, __LINE__, argv[0], data_filename); return EXIT_FAILURE; }
 
-  if( data_file == NULL) { fferror_print(__FILE__, __LINE__, argv[0], data_filename);  exit(EXIT_FAILURE); }
-  if(index_file == NULL) { fferror_print(__FILE__, __LINE__, argv[0], index_filename);  exit(EXIT_FAILURE); }
+  FILE *index_file = fopen(index_filename, "r");
+  if(index_file == NULL) { fferror_print(__FILE__, __LINE__, argv[0], index_filename); err = EXIT_FAILURE; goto close_data_file; }
 
   size_t data_size;
   char *data = ffindex_mmap_data(data_file, &data_size);
+  if (data == MAP_FAILED) { fferror_print(__FILE__, __LINE__, "ffindex_get", data_filename); err = EXIT_FAILURE; goto close_index_file; }
 
   ffindex_index_t* index = ffindex_index_parse(index_file, 0);
   if(index == NULL)
   {
     fferror_print(__FILE__, __LINE__, "ffindex_index_parse", index_filename);
-    exit(EXIT_FAILURE);
+    err = EXIT_FAILURE;
+    goto unmap_data;
   }
-
-  ffindex_munmap_data(index->index_data, index->index_data_size);
-  index->index_data = NULL;
-  index->index_data_size = 0;
-  fclose(index_file);
 
   if(chdir(out_dir) < 0){ fferror_print(__FILE__, __LINE__, argv[0], out_dir);  exit(EXIT_FAILURE); }
 
@@ -88,10 +86,14 @@ int main(int argn, char **argv)
   }
 
   ffindex_index_free(index);
+unmap_data:
   ffindex_munmap_data(data, data_size);
+close_index_file:
+  fclose(index_file);
+close_data_file:
   fclose(data_file);
 
-  return 0;
+  return err;
 }
 
 /* vim: ts=2 sw=2 et

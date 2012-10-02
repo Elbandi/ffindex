@@ -107,22 +107,3 @@ Forwarded: yes
  	install ffindex.h $(INSTALL_DIR)/include/ffindex.h
  	install ffutil.h $(INSTALL_DIR)/include/ffutil.h
  ifdef HAVE_MPI
---- a/src/ffindex_modify.c
-+++ b/src/ffindex_modify.c
- int main(int argn, char **argv)
-@@ -148,14 +148,9 @@ int main(int argn, char **argv)
-         sorted_names_to_unlink[y] = argv[i];
-       ffindex_unlink_entries(index, sorted_names_to_unlink, y);
- 
--      /* Sort the index entries and write back */
-+      /* Sort the index entries */
-       if(sort)
--      {
-         ffindex_sort_index_file(index);
--        index_file = fopen(index_filename, "w");
--        if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
--        err += ffindex_write(index, index_file);
--      }
-     }
-   }
- 

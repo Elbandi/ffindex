@@ -92,7 +92,7 @@ int main(int argn, char **argv)
   char *fasta_data = ffindex_mmap_data(fasta_file, &fasta_size);
   size_t offset = 0;
   size_t from_length = 0;
-  char name[FFINDEX_MAX_ENTRY_NAME_LENTH];
+  char name[24];
   int seq_id = 1;
   for(size_t fasta_offset = 1; fasta_offset < fasta_size; fasta_offset++) // position after first ">"
   {

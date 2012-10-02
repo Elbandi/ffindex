@@ -14,14 +14,13 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 
 #include "ffindex.h"
 #include "ffutil.h"
@@ -48,11 +47,8 @@ void usage(char *program_name)
                     "\t\t$ ffindex_build -a foo.ffdata foo.ffindex myfile3.txt myfile4.txt\n"
                     "\n\tOops, forgot to sort it (-s) so do it afterwards:\n"
                     "\t\t$ ffindex_build -as foo.ffdata foo.ffindex\n"
-                    "\nNOTE:\n"
-                    "\tMaximum entries are by default %d\n"
-                    "\tThis can be changed in the sources.\n"
                     "\nDesigned and implemented by Andreas W. Hauser <hauser@genzentrum.lmu.de>.\n",
-                    basename(program_name), MAX_FILENAME_LIST_FILES, FFINDEX_MAX_ENTRY_NAME_LENTH, FFINDEX_MAX_INDEX_ENTRIES_DEFAULT);
+                    basename(program_name), MAX_FILENAME_LIST_FILES);
 }
 
 int main(int argn, char **argv)
@@ -73,12 +69,15 @@ int main(int argn, char **argv)
         do_append = 1;
         break;
       case 'd':
+        if (list_ffindex_data_index == MAX_FILENAME_LIST_FILES) goto error;
         list_ffindex_data[list_ffindex_data_index++] = optarg;
         break;
       case 'i':
+        if (list_ffindex_index_index == MAX_FILENAME_LIST_FILES) goto error;
         list_ffindex_index[list_ffindex_index_index++] = optarg;
         break;
       case 'f':
+        if (list_filenames_index == MAX_FILENAME_LIST_FILES) goto error;
         list_filenames[list_filenames_index++] = optarg;
         break;
       case 's':
@@ -88,6 +87,7 @@ int main(int argn, char **argv)
         do_version = 1;
         break;
       default:
+error:
         usage(argv[0]);
         return EXIT_FAILURE;
     }
@@ -131,7 +131,7 @@ int main(int argn, char **argv)
     if( data_file == NULL) { perror(data_filename); return EXIT_FAILURE; }
 
     index_file = fopen(index_filename, "a+");
-    if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
+    if(index_file == NULL) { perror(index_filename); err = EXIT_FAILURE; goto close_data; }
 
     struct stat sb;
     fstat(fileno(data_file), &sb);
@@ -149,9 +149,9 @@ int main(int argn, char **argv)
     data_file  = fopen(data_filename, "w");
     if( data_file == NULL) { perror(data_filename); return EXIT_FAILURE; }
 
-    if(stat(index_filename, &st) == 0) { errno = EEXIST; perror(index_filename); return EXIT_FAILURE; }
+    if(stat(index_filename, &st) == 0) { errno = EEXIST; perror(index_filename); err = EXIT_FAILURE; goto close_data; }
     index_file = fopen(index_filename, "w+");
-    if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
+    if(index_file == NULL) { perror(index_filename); err = EXIT_FAILURE; goto close_data; }
   }
 
 
@@ -160,11 +160,12 @@ int main(int argn, char **argv)
     for(int i = 0; i < list_filenames_index; i++)
     {
       FILE *list_file = fopen(list_filenames[i], "r");
-      if( list_file == NULL) { perror(list_filenames[i]); return EXIT_FAILURE; }
+      if( list_file == NULL) { perror(list_filenames[i]); err = EXIT_FAILURE; goto close_index; }
       if(ffindex_insert_list_file(data_file, index_file, &offset, list_file) < 0)
       {
         perror(list_filenames[i]);
-        err = -1;
+        err = EXIT_FAILURE;
+        goto close_index;
       }
     }
 
@@ -173,20 +174,34 @@ int main(int argn, char **argv)
   {
     for(int i = 0; i < list_ffindex_data_index; i++)
     {
-      FILE* data_file_to_add  = fopen(list_ffindex_data[i], "r");  if(  data_file_to_add == NULL) { perror(list_ffindex_data[i]); return EXIT_FAILURE; }
-      FILE* index_file_to_add = fopen(list_ffindex_index[i], "r"); if( index_file_to_add == NULL) { perror(list_ffindex_index[i]); return EXIT_FAILURE; }
+      FILE* data_file_to_add  = fopen(list_ffindex_data[i], "r");  if(  data_file_to_add == NULL) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto close_index; }
+      FILE* index_file_to_add = fopen(list_ffindex_index[i], "r"); if( index_file_to_add == NULL) { perror(list_ffindex_index[i]); err = EXIT_FAILURE; goto close_data_add_file; }
       size_t data_size;
       char *data_to_add = ffindex_mmap_data(data_file_to_add, &data_size);
+      if (data_to_add == MAP_FAILED) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto close_index_add_file; }
       ffindex_index_t* index_to_add = ffindex_index_parse(index_file_to_add, 0);
+      if (index_to_add == NULL) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto munmap_data; }
       for(size_t entry_i = 0; entry_i < index_to_add->n_entries; entry_i++)
       {
         ffindex_entry_t *entry = ffindex_get_entry_by_index(index_to_add, entry_i);
-        ffindex_insert_memory(data_file, index_file, &offset, ffindex_get_data_by_entry(data_to_add, entry), entry->length - 1, entry->name); // skip \0 suffix
+        if (ffindex_insert_memory(data_file, index_file, &offset, ffindex_get_data_by_entry(data_to_add, entry), entry->length - 1, entry->name) == FFINDEX_ERROR) // skip \0 suffix
+        {
+          perror(list_ffindex_data[i]);
+          err = EXIT_FAILURE;
+          break;
+        }
       }
-      ffindex_munmap_data(data_to_add, data_size);
       ffindex_index_free(index_to_add);
-      fclose(data_file_to_add);
+munmap_data:
+      ffindex_munmap_data(data_to_add, data_size);
+close_index_add_file:
       fclose(index_file_to_add);
+close_data_add_file:
+      fclose(data_file_to_add);
+      if (err == EXIT_FAILURE)
+      {
+        goto close_index;
+      }
     }
   }
 
@@ -205,14 +220,14 @@ int main(int argn, char **argv)
     if(S_ISDIR(sb.st_mode))
     {
       err = ffindex_insert_dir(data_file, index_file, &offset, path);
-      if(err < 0)fferror_print(__FILE__, __LINE__, __func__, path);
+      if(err < 0) fferror_print(__FILE__, __LINE__, __func__, path);
     }
     else if(S_ISREG(sb.st_mode))
     {
-      ffindex_insert_file(data_file, index_file, &offset, path, path);
+      err = ffindex_insert_file(data_file, index_file, &offset, path, path);
+      if(err < 0) fferror_print(__FILE__, __LINE__, __func__, path);
     }
   }
-  fclose(data_file);
 
   /* Sort the index entries and write back */
   if(do_sort)
@@ -222,17 +237,35 @@ int main(int argn, char **argv)
     if(index == NULL)
     {
       fferror_print(__FILE__, __LINE__, __func__, index_filename);
-      exit(EXIT_FAILURE);
+      err = EXIT_FAILURE;
+      goto close_index;
     }
     fclose(index_file);
     ffindex_sort_index_file(index);
     index_file = fopen(index_filename, "w");
-    if(index_file == NULL) { perror(index_filename); return EXIT_FAILURE; }
-    err += ffindex_write(index, index_file);
+    if(index_file == NULL) { perror(index_filename); err = EXIT_FAILURE; }
+    else
+    {
+      if (ffindex_write(index, index_file) != FFINDEX_OK)
+      {
+        err = EXIT_FAILURE;
+      }
+    }
     ffindex_index_free(index);
   }
 
+close_index:
   fclose(index_file);
+  if (err == EXIT_FAILURE)
+  {
+    unlink(index_filename);
+  }
+close_data:
+  fclose(data_file);
+  if (err == EXIT_FAILURE)
+  {
+    unlink(data_filename);
+  }
   return err;
 }
 

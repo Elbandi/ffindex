@@ -23,7 +23,6 @@
 #include <time.h> /* time_t */
 
 #define FFINDEX_VERSION 0.980
-#define FFINDEX_MAX_INDEX_ENTRIES_DEFAULT 40000000
 
 #define FFINDEX_OK 0
 #define FFINDEX_ERROR -1
