@@ -224,7 +224,7 @@ close_data_add_file:
     }
     else if(S_ISREG(sb.st_mode))
     {
-      err = ffindex_insert_file(data_file, index_file, &offset, path, path);
+      err = ffindex_insert_file(data_file, index_file, &offset, path, basename(path));
       if(err < 0) fferror_print(__FILE__, __LINE__, __func__, path);
     }
   }
