@@ -228,6 +228,7 @@ char* ffindex_mmap_data(FILE *file, size_t* size)
     return MAP_FAILED;
   }
   *size = sb.st_size;
+  if (sb.st_size == 0) return NULL;
   return (char*)mmap(NULL, *size, PROT_READ, MAP_PRIVATE, fd, 0);
 }
 
@@ -269,12 +270,13 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
   index->num_max_entries = num_start_entries;
 
   index->file = index_file;
-  index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));
-  if(index->index_data_size == 0)
-    return NULL;
-  if(index->index_data == MAP_FAILED)
-    return NULL;
+  index->n_entries = 0;
   index->type = SORTED_ARRAY; /* XXX Assume a sorted file for now */
+  index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));
+  if(index->index_data == MAP_FAILED || index->index_data == NULL)
+    return index;
+  if(index->index_data_size == 0)
+    goto parse_end;
   int i = 0;
   char* d = index->index_data;
   char* end;
@@ -319,10 +321,10 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
     warn("index with 0 entries");
 #endif
 
+parse_end:
   ffindex_munmap_data(index->index_data, index->index_data_size);
   index->index_data_size = 0;
   index->index_data = NULL;
-
   return index;
 }
 

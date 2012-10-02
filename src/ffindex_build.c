@@ -178,7 +178,7 @@ error:
       FILE* index_file_to_add = fopen(list_ffindex_index[i], "r"); if( index_file_to_add == NULL) { perror(list_ffindex_index[i]); err = EXIT_FAILURE; goto close_data_add_file; }
       size_t data_size;
       char *data_to_add = ffindex_mmap_data(data_file_to_add, &data_size);
-      if (data_to_add == MAP_FAILED) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto close_index_add_file; }
+      if (data_to_add == MAP_FAILED || data_to_add == NULL) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto close_index_add_file; }
       ffindex_index_t* index_to_add = ffindex_index_parse(index_file_to_add, 0);
       if (index_to_add == NULL) { perror(list_ffindex_data[i]); err = EXIT_FAILURE; goto munmap_data; }
       for(size_t entry_i = 0; entry_i < index_to_add->n_entries; entry_i++)

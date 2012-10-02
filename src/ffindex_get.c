@@ -64,7 +64,7 @@ int main(int argn, char **argv)
 
   size_t data_size;
   char *data = ffindex_mmap_data(data_file, &data_size);
-  if (data == MAP_FAILED) { fferror_print(__FILE__, __LINE__, "ffindex_get", data_filename); err = EXIT_FAILURE; goto close_index_file; }
+  if (data == MAP_FAILED || data == NULL) { fferror_print(__FILE__, __LINE__, "ffindex_get", data_filename); err = EXIT_FAILURE; goto close_index_file; }
 
   ffindex_index_t* index = ffindex_index_parse(index_file, 0);
   if(index == NULL)
