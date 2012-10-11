@@ -215,12 +215,17 @@ int ffindex_restore(FILE *data_file, FILE *index_file, char *input_dir_name)
   return FFINDEX_ERROR;
 }
 
-
 char* ffindex_mmap_data(FILE *file, size_t* size)
 {
+  int fd = fileno(file);
+  return ffindex_mmap_data2(fd, size);
+}
+
+
+char* ffindex_mmap_data2(int file_fd, size_t* size)
+{
   struct stat sb;
-  int fd =  fileno(file);
-  if (fd == -1 || fstat(fd, &sb) != 0)
+  if (file_fd == -1 || fstat(file_fd, &sb) != 0)
   {
 #ifdef DEBUG
     fferror_print(__FILE__, __LINE__, __func__, "fstat failed");
@@ -229,7 +234,7 @@ char* ffindex_mmap_data(FILE *file, size_t* size)
   }
   *size = sb.st_size;
   if (sb.st_size == 0) return NULL;
-  return (char*)mmap(NULL, *size, PROT_READ, MAP_PRIVATE, fd, 0);
+  return (char*)mmap(NULL, *size, PROT_READ, MAP_PRIVATE, file_fd, 0);
 }
 
 int ffindex_munmap_data(char *data, size_t size)
@@ -255,6 +260,13 @@ ffindex_entry_t* ffindex_bsearch_get_entry(ffindex_index_t *index, char *name)
 
 ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
 {
+  int fd = fileno(index_file);
+  return ffindex_index_parse2(fd, num_start_entries);
+}
+
+
+ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
+{
   if(num_start_entries == 0)
     num_start_entries = 2;
   size_t nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * num_start_entries);
@@ -269,7 +281,7 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
   }
   index->num_max_entries = num_start_entries;
 
-  index->file = index_file;
+//  index->file = index_file;
   index->n_entries = 0;
   index->type = SORTED_ARRAY; /* XXX Assume a sorted file for now */
   index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));

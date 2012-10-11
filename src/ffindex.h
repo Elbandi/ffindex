@@ -39,7 +39,6 @@ typedef struct ffindex_entry {
 typedef struct ffindex_index {
   enum ffindex_type type;
   char* filename;
-  FILE* file;
   char* index_data;
   size_t index_data_size;
   void* tree_root;
@@ -61,6 +60,7 @@ FILE* ffindex_fopen_by_entry(char *data, ffindex_entry_t* entry);
 FILE* ffindex_fopen_by_name(char *data, ffindex_index_t *index, char *name);
 
 char* ffindex_mmap_data(FILE *file, size_t* size);
+char* ffindex_mmap_data2(int file_fd, size_t* size);
 
 int ffindex_munmap_data(char *data, size_t size);
 
@@ -75,6 +75,7 @@ char* ffindex_get_data_by_index(char *data, ffindex_index_t *index, size_t entry
 ffindex_entry_t* ffindex_get_entry_by_index(ffindex_index_t *index, size_t entry_index);
 
 ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries);
+ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries);
 
 void ffindex_index_free(ffindex_index_t *index);
 
