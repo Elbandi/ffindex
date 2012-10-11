@@ -341,6 +341,46 @@ parse_end:
 }
 
 
+ffindex_entry_t* ffindex_get_entry_by_name(int index_file, char *name)
+{
+  char* index_data;
+  size_t index_data_size;
+  ffindex_entry_t* entry = NULL;
+  index_data = ffindex_mmap_data2(index_file, &(index_data_size));
+  if(index_data == MAP_FAILED || index_data == NULL)
+    return NULL;
+  if(index_data_size != 0) {
+    int i = 0;
+    char* d = index_data;
+    char* end;
+    /* Faster than scanf per line */
+    while(d < (index_data + index_data_size))
+    {
+      for(end = d; *end != '\t'; end++);
+      if (end != d && strncmp(d, name, end - d) == 0) {
+        entry = (ffindex_entry_t *)malloc(sizeof(ffindex_entry_t));
+        if (entry != NULL) {
+          entry->name = strndup(d, end - d);
+          d = end + 1;
+          entry->offset = strtol(d, &end, 10);
+          d = end;
+          entry->length  = strtol(d, &end, 10);
+          d = end;
+          entry->mtime  = strtol(d, &end, 10);
+        }
+        goto parse_end;
+      }
+      while (*end != '\n') end++;
+      d = end + 1; /* +1 for newline */
+    }
+  }
+
+parse_end:
+  ffindex_munmap_data(index_data, index_data_size);
+  return entry;
+}
+
+
 void ffindex_index_free(ffindex_index_t *index)
 {
     for (size_t n = 0; n < index->n_entries; n++) {

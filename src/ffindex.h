@@ -79,6 +79,9 @@ void ffindex_index_free(ffindex_index_t *index);
 
 ffindex_entry_t* ffindex_bsearch_get_entry(ffindex_index_t *index, char *name);
 
+/* this is a speed version to get the entry data: reads the index until find the name */
+ffindex_entry_t* ffindex_get_entry_by_name(int index_file, char *name);
+
 void ffindex_sort_index_file(ffindex_index_t *index);
 
 int ffindex_write(ffindex_index_t* index, FILE* index_file);
