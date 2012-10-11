@@ -297,7 +297,6 @@ ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
   /* Faster than scanf per line */
   for(i = 0; d < (index_data + index_data_size); i++)
   {
-    char *p;
     if (i == index->num_max_entries) {
         nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * index->num_max_entries * 2);
         ffindex_index_t *tmp = (ffindex_index_t *)realloc(index, nbytes);
@@ -312,9 +311,9 @@ ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
         index = tmp;
         index->num_max_entries *= 2;
     }
-    for(p = d; *p != '\t'; p++);
-    index->entries[i].name = strndup(d, p - d);
-    d = p + 1;
+    for(end = d; *end != '\t'; end++);
+    index->entries[i].name = strndup(d, end - d);
+    d = end + 1;
     index->entries[i].offset = strtol(d, &end, 10);
     d = end;
     index->entries[i].length  = strtol(d, &end, 10);
@@ -324,8 +323,9 @@ ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
      * eat the remaining chars from line, so current version of library is
      * forward compatible with future versions, if new field is added
      */
-    while (*end != '\n') end++;
-    d = end + 1; /* +1 for newline */
+    d = end;
+    while (*d != '\n') d++;
+    d++; /* +1 for newline */
   }
 
   index->n_entries = i;
