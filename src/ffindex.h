@@ -39,8 +39,6 @@ typedef struct ffindex_entry {
 typedef struct ffindex_index {
   enum ffindex_type type;
   char* filename;
-  char* index_data;
-  size_t index_data_size;
   void* tree_root;
   size_t num_max_entries;
   size_t n_entries;

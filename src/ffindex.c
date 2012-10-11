@@ -267,6 +267,8 @@ ffindex_index_t* ffindex_index_parse(FILE *index_file, size_t num_start_entries)
 
 ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
 {
+  char* index_data;
+  size_t index_data_size;
   if(num_start_entries == 0)
     num_start_entries = 2;
   size_t nbytes = sizeof(ffindex_index_t) + (sizeof(ffindex_entry_t) * num_start_entries);
@@ -284,16 +286,16 @@ ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
 //  index->file = index_file;
   index->n_entries = 0;
   index->type = SORTED_ARRAY; /* XXX Assume a sorted file for now */
-  index->index_data = ffindex_mmap_data(index_file, &(index->index_data_size));
-  if(index->index_data == MAP_FAILED || index->index_data == NULL)
+  index_data = ffindex_mmap_data2(index_file, &(index_data_size));
+  if(index_data == MAP_FAILED || index_data == NULL)
     return index;
-  if(index->index_data_size == 0)
+  if(index_data_size == 0)
     goto parse_end;
   int i = 0;
-  char* d = index->index_data;
+  char* d = index_data;
   char* end;
   /* Faster than scanf per line */
-  for(i = 0; d < (index->index_data + index->index_data_size); i++)
+  for(i = 0; d < (index_data + index_data_size); i++)
   {
     char *p;
     if (i == index->num_max_entries) {
@@ -334,9 +336,7 @@ ffindex_index_t* ffindex_index_parse2(int index_file, size_t num_start_entries)
 #endif
 
 parse_end:
-  ffindex_munmap_data(index->index_data, index->index_data_size);
-  index->index_data_size = 0;
-  index->index_data = NULL;
+  ffindex_munmap_data(index_data, index_data_size);
   return index;
 }
 
