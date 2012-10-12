@@ -361,7 +361,8 @@ ffindex_entry_t* ffindex_get_entry_by_name(int index_file, char *name)
       if (end != d && strncmp(d, name, end - d) == 0) {
         entry = (ffindex_entry_t *)malloc(sizeof(ffindex_entry_t));
         if (entry != NULL) {
-          entry->name = strndup(d, end - d);
+          /* we are cheating: send the search file name back */
+          entry->name = name;
           d = end + 1;
           entry->offset = strtol(d, &end, 10);
           d = end;
@@ -387,7 +388,6 @@ void ffindex_index_free(ffindex_index_t *index)
 {
     for (size_t n = 0; n < index->n_entries; n++) {
         free(index->entries[n].name);
-        index->entries[n].name = NULL;
     }
     free(index);
 }
