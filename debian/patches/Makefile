@@ -85,9 +85,9 @@ Forwarded: yes
  	LD_LIBRARY_PATH=".:$(LD_LIBRARY_PATH)" zsh -c "time ./ffindex_get  ../test_big/nr20_11Jan10_a3m_db ../test_big/nr20_11Jan10_a3m_db.ffindex BABBAMIBA.a3m KARDUZEBA.a3m HARPAQIBA.a3m WOQQATEBA.a3m BEBRAQIBA.a3m GIRSAKEBA.a3m NAQTIFIBA.a3m BIWCIQABA.a3m > /dev/null"
  
  clean:
--	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o \
-+	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.$(SOCURRENT) libffindex.so.$(SOVERSION) ffindex_modify ffindex_modify.o \
- 		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
+-	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o ffindexfs.o fflog.o \
++	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.$(SOCURRENT) libffindex.so.$(SOVERSION) ffindex_modify ffindex_modify.o ffindexfs.o fflog.o \
+ 		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack ffindexfs
  
 +distclean: clean
 +
@@ -95,9 +95,9 @@ Forwarded: yes
  	mkdir -p $(INSTALL_DIR)/bin
  	mkdir -p $(INSTALL_DIR)/$(libdir)
 @@ -89,9 +93,10 @@
- 	install ffindex_from_fasta $(INSTALL_DIR)/bin/ffindex_from_fasta
  	install ffindex_apply $(INSTALL_DIR)/bin/ffindex_apply
  	install ffindex_unpack $(INSTALL_DIR)/bin/ffindex_unpack
+ 	install ffindexfs $(INSTALL_DIR)/bin/ffindexfs
 -	install libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.1.1
 +	install libffindex.so.$(SOVERSION) $(INSTALL_DIR)/$(libdir)/libffindex.so.$(SOVERSION)
  	install libffindex.a $(INSTALL_DIR)/$(libdir)/libffindex.a

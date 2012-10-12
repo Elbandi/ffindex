@@ -14,7 +14,7 @@ endif
 
 #-Wl,--version-script=libffindex.map
 
-OBJECTS=ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so ffindex_unpack
+OBJECTS=ffindex_apply ffindex_from_fasta ffindex_get ffindex_build ffindex_modify libffindex.a libffindex.so ffindex_unpack ffindexfs
 
 ifdef HAVE_MPI
 OBJECTS+=ffindex_apply_mpi
@@ -23,6 +23,14 @@ endif
 all: $(OBJECTS)
 
 ffindex.o: ffindex.c ffindex.h ffutil.h
+
+ffindexfs: CPPFLAGS+= $(shell pkg-config --cflags fuse)
+ffindexfs: CPPFLAGS+= -DFUSE_USE_VERSION=26
+ffindexfs: LDFLAGS+= $(shell pkg-config --libs fuse)
+
+fflog.o: CFLAGS+=-std=gnu99
+ffindexfs: $(FFINDEX_OBJECTS) ffindexfs.o fflog.o ffindex.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ ffindexfs.o fflog.o $(LDFLAGS) -L. -lffindex
 
 ffindex_apply: $(FFINDEX_OBJECTS) ffindex_apply.o ffindex.h
 
@@ -76,8 +84,8 @@ time:
 	LD_LIBRARY_PATH=".:$(LD_LIBRARY_PATH)" zsh -c "time ./ffindex_get  ../test_big/nr20_11Jan10_a3m_db ../test_big/nr20_11Jan10_a3m_db.ffindex BABBAMIBA.a3m KARDUZEBA.a3m HARPAQIBA.a3m WOQQATEBA.a3m BEBRAQIBA.a3m GIRSAKEBA.a3m NAQTIFIBA.a3m BIWCIQABA.a3m > /dev/null"
 
 clean:
-	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o \
-		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack
+	rm -f ffindex.o ffutil.o ffindex_build ffindex_build.o ffindex_get ffindex_get.o libffindex.so libffindex.so.1.1 ffindex_modify ffindex_modify.o ffindexfs.o fflog.o \
+		libffindex.a  ffindex_from_fasta.o ffindex_from_fasta ffindex_apply_mpi.o ffindex_apply.o ffindex_apply ffindex_unpack.o ffindex_unpack ffindexfs
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
@@ -89,6 +97,7 @@ install:
 	install ffindex_from_fasta $(INSTALL_DIR)/bin/ffindex_from_fasta
 	install ffindex_apply $(INSTALL_DIR)/bin/ffindex_apply
 	install ffindex_unpack $(INSTALL_DIR)/bin/ffindex_unpack
+	install ffindexfs $(INSTALL_DIR)/bin/ffindexfs
 	install libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so.1.1
 	install libffindex.a $(INSTALL_DIR)/$(libdir)/libffindex.a
 	ln -sf libffindex.so.1.1 $(INSTALL_DIR)/$(libdir)/libffindex.so
