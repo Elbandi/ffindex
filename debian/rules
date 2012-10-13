@@ -18,6 +18,32 @@ BINNAMES =	\
 		ffindex_unpack="unpack all entries from file";\
 		ffindexfs="FUSE module";\
 
+.PHONY: override_dh_auto_configure
+override_dh_auto_configure:
+	dh_auto_configure
+	cd php && phpize5 && \
+	./configure -q \
+		--prefix=/usr \
+		--with-ffindex=../src \
+		--with-php-config=/usr/bin/php-config5
+
+.PHONY: override_dh_auto_build
+override_dh_auto_build:
+	dh_auto_build
+	cd php && $(MAKE)
+
+.PHONY: override_dh_auto_install
+override_dh_auto_install:
+	dh_auto_install
+	cd php && $(MAKE) INSTALL_ROOT=../debian/php5-ffindex install
+	install -m0755 -d -D debian/php5-ffindex/etc/php5/conf.d/
+	echo 'extension=ffindex.so' > debian/php5-ffindex/etc/php5/conf.d/ffindex.ini
+
+.PHONY: override_dh_gencontrol
+override_dh_gencontrol:
+	dh_gencontrol
+	echo "php:Depends=phpapi-`php-config5 --phpapi`" >> debian/php5-ffindex.substvars
+
 .PHONY: override_dh_installman
 override_dh_installman: $(FFMANPAGES)
 	dh_installman
@@ -28,6 +54,7 @@ $(FFMANPAGES): %.1 : debian/tmp/usr/bin/%
 .PHONY: override_dh_clean
 override_dh_clean:
 	rm -f $(FFMANPAGES)
+	cd php && phpize5 --clean
 	dh_clean
 
 .PHONY: override_dh_strip

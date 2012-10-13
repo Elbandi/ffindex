@@ -3,7 +3,7 @@ Section: science
 Priority: extra
 Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
 Uploaders: Laszlo Kajan <lkajan@rostlab.org>
-Build-Depends: debhelper (>= 7.4.0), help2man, quilt, pkg-config, libfuse-dev
+Build-Depends: debhelper (>= 7.4.0), help2man, quilt, pkg-config, libfuse-dev, php5-dev
 Standards-Version: 3.9.3
 Homepage: http://pubshare.genzentrum.lmu.de/scientific_computing/software/ffindex/
 Vcs-Svn: svn://svn.debian.org/debian-med/trunk/packages/ffindex/trunk/
@@ -33,6 +33,18 @@ Description: simple index/database for huge amounts of small files
  array made from the index file.
  .
  This package provides the FUSE module.
+
+Package: php5-ffindex
+Architecture: any
+Depends: libffindex1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: simple index/database for huge amounts of small files
+ FFindex is a very simple index/database for huge amounts of small files. The
+ files are stored concatenated in one big data file, separated by '\0'. A
+ second file contains a plain text index, giving name, offset and length of
+ the small files. The lookup is currently done with a binary search on an
+ array made from the index file.
+ .
+ This package provides the PHP5 module.
 
 Package: libffindex1
 Architecture: any
