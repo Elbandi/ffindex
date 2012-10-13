@@ -61,12 +61,6 @@ override_dh_clean:
 override_dh_strip:
 	dh_strip --dbg-package=ffindex-dbg
 
-# [Laszlo Kajan <lkajan@rostlab.org>]
-# ffindex has an overly large default for FFINDEX_MAX_INDEX_ENTRIES (40000000). In order to require less RAM for testing the package (make check), a more modest value is set below.
-.PHONY: override_dh_auto_test
-override_dh_auto_test:
-	dh_auto_test -- FFINDEX_MAX_INDEX_ENTRIES=20000
-
 get-orig-source:
 	mkdir -p ../tarballs
 	uscan --verbose --force-download --destdir=../tarballs
