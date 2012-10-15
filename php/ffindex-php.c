@@ -270,7 +270,7 @@ PHP_FUNCTION(ffindex_build) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", data_file_name);
 		RETURN_FALSE;
 	}
-	index_file = php_fopen_with_path(index_file_name, "wb", ".", NULL TSRMLS_CC);
+	index_file = php_fopen_with_path(index_file_name, "w+b", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", data_file_name);
