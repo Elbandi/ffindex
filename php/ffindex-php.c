@@ -52,6 +52,13 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_get, 0, 0, 3)
 	ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
+FFINDEX_ARG_PREFIX
+ZEND_BEGIN_ARG_INFO_EX(arginfo_unpack, 0, 0, 3)
+	ZEND_ARG_INFO(0, index)
+	ZEND_ARG_INFO(0, data)
+	ZEND_ARG_INFO(0, outdir)
+ZEND_END_ARG_INFO()
+
 /* }}} */
 
 
@@ -63,6 +70,7 @@ const zend_function_entry ffindex_functions[] = {
 	PHP_FE(confirm_ffindex_compiled,	NULL)		/* For testing, remove later. */
 	PHP_FE(ffindex_build, arginfo_build)
 	PHP_FE(ffindex_get, arginfo_get)
+	PHP_FE(ffindex_unpack, arginfo_unpack)
 	{NULL, NULL, NULL}	/* Must be the last line in ffindex_functions[] */
 };
 /* }}} */
@@ -257,12 +265,12 @@ PHP_FUNCTION(ffindex_build) {
 		RETURN_FALSE;
 	}
 
-	data_file = VCWD_FOPEN(data_file_name, "wb");
+	data_file = php_fopen_with_path(data_file_name, "wb", ".", NULL TSRMLS_CC);
 	if (!data_file) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", data_file_name);
 		RETURN_FALSE;
 	}
-	index_file = VCWD_FOPEN(index_file_name, "wb");
+	index_file = php_fopen_with_path(index_file_name, "wb", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", data_file_name);
@@ -270,6 +278,9 @@ PHP_FUNCTION(ffindex_build) {
 	}
 	RETVAL_TRUE;
 	if (Z_TYPE_P(zfiles) == IS_STRING) {
+		if (OPENBASEDIR_CHECKPATH(Z_STRVAL_P(zfiles))) {
+			RETVAL_FALSE;
+		}
 		if (ffindex_insert(data_file, index_file, &offset, Z_STRVAL_P(zfiles)) == FAILURE) {
 			RETVAL_FALSE;
 		}
@@ -282,6 +293,10 @@ PHP_FUNCTION(ffindex_build) {
 			zend_hash_move_forward_ex(hfiles, &pos)) {
 			if (Z_TYPE_PP(tmp) != IS_STRING) {
 				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Couldn't get string from file lists");
+				RETVAL_FALSE;
+				break;
+			}
+			if (OPENBASEDIR_CHECKPATH(Z_STRVAL_PP(tmp))) {
 				RETVAL_FALSE;
 				break;
 			}
@@ -339,12 +354,12 @@ PHP_FUNCTION(ffindex_get) {
 		RETURN_FALSE;
 	}
 
-	data_file = VCWD_FOPEN(data_file_name, "rb");
+	data_file = php_fopen_with_path(data_file_name, "rb", ".", NULL TSRMLS_CC);
 	if (!data_file) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
 		RETURN_FALSE;
 	}
-	index_file = VCWD_FOPEN(index_file_name, "rb");
+	index_file = php_fopen_with_path(index_file_name, "rb", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
@@ -383,6 +398,104 @@ PHP_FUNCTION(ffindex_get) {
 	fclose(data_file);
 }
 /* }}} */
+
+/* procedural APIs*/
+/* {{{ proto ffindex_unpack(string $data_file, string $index_file, string $outdir)
+*/
+PHP_FUNCTION(ffindex_unpack) {
+	char *index_file_name;
+	int index_file_len;
+	FILE *index_file;
+	char *data_file_name;
+	int data_file_len;
+	FILE *data_file;
+	char *outdir_name;
+	int outdir_len;
+
+	/* Parse arguments */
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss", &data_file_name, &data_file_len, &index_file_name, &index_file_len, &outdir_name, &outdir_len) == FAILURE) {
+		return;
+	}
+	if (!data_file_len) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "data filename cannot be empty");
+		RETURN_FALSE;
+	}
+	if (!index_file_len) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "index filename cannot be empty");
+		RETURN_FALSE;
+	}
+	if (index_file_len == data_file_len && strcmp(index_file_name, data_file_name) == 0) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "index and data file name sould different");
+		RETURN_FALSE;
+	}
+	if (!outdir_len) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "outdir cannot be empty");
+		RETURN_FALSE;
+	}
+	if (OPENBASEDIR_CHECKPATH(outdir_name)) {
+		RETURN_FALSE;
+	}
+
+	data_file = php_fopen_with_path(data_file_name, "rb", ".", NULL TSRMLS_CC);
+	if (!data_file) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
+		RETURN_FALSE;
+	}
+	index_file = php_fopen_with_path(index_file_name, "rb", ".", NULL TSRMLS_CC);
+	if (!index_file) {
+		fclose(data_file);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
+		RETURN_FALSE;
+	}
+	size_t data_size;
+	char *data = ffindex_mmap_data(data_file, &data_size);
+	if (data == MAP_FAILED || data == NULL) {
+		fclose(index_file);
+		fclose(data_file);
+		RETURN_FALSE;
+	}
+	size_t count = 0;
+	do {
+		ffindex_index_t* index = ffindex_index_parse(index_file, 0);
+		if (index == NULL) {
+			break;
+		}
+		size_t range_start = 0;
+		size_t range_end = index->n_entries;
+		FILE *output_file;
+		size_t entry_index;
+		for(entry_index = range_start; entry_index < range_end; entry_index++)
+		{
+			ffindex_entry_t* entry = ffindex_get_entry_by_index(index, entry_index);
+			if(entry == NULL) {
+				continue;
+			}
+			char *filedata = ffindex_get_data_by_entry(data, entry);
+			if(filedata == NULL) {
+				continue;
+			}
+			output_file = php_fopen_with_path(entry->name, "w", outdir_name, NULL TSRMLS_CC);
+			if(output_file == NULL) {
+				continue;
+			}
+			size_t written = fwrite(filedata, entry->length - 1, 1, output_file);
+			if(written >= 1) {
+				count++;
+			}
+			fclose(output_file);
+		}
+	} while(0);
+	fclose(index_file);
+	fclose(data_file);
+	RETVAL_LONG(count);
+}
+/* }}} */
+
+/*
+if (strlen(filename) != filename_len) {
+		RETURN_FALSE;
+	}
+*/
 
 /*
  * Local variables:

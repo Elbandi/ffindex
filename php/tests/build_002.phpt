@@ -1,5 +1,5 @@
 --TEST--
-ffindex build test: one files
+ffindex_build test: one files
 --SKIPIF--
 <?php if (!extension_loaded("ffindex")) die("skip"); ?>
 --FILE--

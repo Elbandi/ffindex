@@ -1,5 +1,5 @@
 --TEST--
-ffindex build test: multiple files
+ffindex_build test: multiple files
 --SKIPIF--
 <?php if (!extension_loaded("ffindex")) die("skip"); ?>
 --FILE--
@@ -16,7 +16,7 @@ var_dump(ffindex_build($data_name, $index_name, $files));
 var_dump( file_exists($data_name) );
 var_dump( file_exists($index_name) );
 
-exec("ffindex_build $data_name2 $index_name2 ".implode(" ", $files));
+exec("../src/ffindex_build $data_name2 $index_name2 ".implode(" ", $files));
 echo "Check:\n";
 var_dump(md5_file($data_name) == md5_file($data_name2));
 var_dump(md5_file($index_name) == md5_file($index_name2));

@@ -1,5 +1,5 @@
 --TEST--
-ffindex_get test: get file data
+ffindex_unpack test: unpack files to directory
 --SKIPIF--
 <?php if (!extension_loaded("ffindex")) die("skip"); ?>
 --FILE--
@@ -8,18 +8,23 @@ ffindex_get test: get file data
 $data_name = tempnam(sys_get_temp_dir(), 'test.dat').posix_getpid();
 $index_name = tempnam(sys_get_temp_dir(), 'test.idx').posix_getpid();
 
-$files = array(dirname(__FILE__)."/build_001.phpt", dirname(__FILE__)."/build_002.phpt");
-exec("../src/ffindex_build $data_name $index_name ".implode(" ", $files));
+$outdir = tempnam(sys_get_temp_dir(), 'test').posix_getpid();
+var_dump(mkdir($outdir));
 
-$m = md5(ffindex_get($data_name, $index_name, "build_001.phpt"));
+$files = array(dirname(__FILE__)."/build_001.phpt", dirname(__FILE__)."/build_002.phpt");
+exec("../src/ffindex_build $data_name $index_name ".implode(" ", $files), $dummy, $return_var);
+var_dump($return_var);
+
+var_dump(ffindex_unpack($data_name, $index_name, $outdir));
+$m = md5($outdir."/build_001.phpt");
 $e = md5_file(dirname(__FILE__)."/build_001.phpt");
 var_dump($m == $e);
 
-$m = md5(ffindex_get($data_name, $index_name, "build_002.phpt"));
+$m = md5($outdir."/build_002.phpt");
 $e = md5_file(dirname(__FILE__)."/build_002.phpt");
 var_dump($m == $e);
 
-var_dump(ffindex_get($data_name, $index_name, "nonexists"));
+//var_dump(ffindex_unpack($data_name, $index_name, "nonexists"));
 
 @unlink($data_name);
 @unlink($index_name);
@@ -27,5 +32,8 @@ var_dump(ffindex_get($data_name, $index_name, "nonexists"));
 ?>
 --EXPECT--
 bool(true)
-bool(true)
+int(0)
+int(2)
 bool(false)
+bool(false)
+

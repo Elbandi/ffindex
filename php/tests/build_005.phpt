@@ -1,5 +1,5 @@
 --TEST--
-ffindex build test: multiple file with one missing
+ffindex_build test: multiple file with one missing
 --SKIPIF--
 <?php if (!extension_loaded("ffindex")) die("skip"); ?>
 --FILE--
