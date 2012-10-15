@@ -32,6 +32,11 @@ override_dh_auto_build:
 	dh_auto_build
 	cd php && $(MAKE)
 
+.PHONY: override_dh_auto_test
+override_dh_auto_test:
+	dh_auto_test
+	cd php && $(MAKE) test REPORT_EXIT_STATUS=1 NO_INTERACTION=y
+
 .PHONY: override_dh_auto_install
 override_dh_auto_install:
 	dh_auto_install
