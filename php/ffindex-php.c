@@ -273,7 +273,7 @@ PHP_FUNCTION(ffindex_build) {
 	index_file = php_fopen_with_path(index_file_name, "w+b", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", data_file_name);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing", index_file_name);
 		RETURN_FALSE;
 	}
 	RETVAL_TRUE;
@@ -362,7 +362,7 @@ PHP_FUNCTION(ffindex_get) {
 	index_file = php_fopen_with_path(index_file_name, "rb", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", index_file_name);
 		RETURN_FALSE;
 	}
 	size_t data_size;
@@ -444,7 +444,7 @@ PHP_FUNCTION(ffindex_unpack) {
 	index_file = php_fopen_with_path(index_file_name, "rb", ".", NULL TSRMLS_CC);
 	if (!index_file) {
 		fclose(data_file);
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", data_file_name);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", index_file_name);
 		RETURN_FALSE;
 	}
 	size_t data_size;
