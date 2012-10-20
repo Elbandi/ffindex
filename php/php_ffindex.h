@@ -54,6 +54,7 @@ PHP_MINFO_FUNCTION(ffindex);
 
 PHP_FUNCTION(confirm_ffindex_compiled);	/* For testing, remove later. */
 PHP_FUNCTION(ffindex_build);
+PHP_FUNCTION(ffindex_list);
 PHP_FUNCTION(ffindex_get);
 PHP_FUNCTION(ffindex_unpack);
 

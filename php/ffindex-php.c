@@ -46,6 +46,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_build, 0, 0, 3)
 ZEND_END_ARG_INFO()
 
 FFINDEX_ARG_PREFIX
+ZEND_BEGIN_ARG_INFO_EX(arginfo_list, 0, 0, 1)
+	ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+FFINDEX_ARG_PREFIX
 ZEND_BEGIN_ARG_INFO_EX(arginfo_get, 0, 0, 3)
 	ZEND_ARG_INFO(0, data)
 	ZEND_ARG_INFO(0, index)
@@ -69,6 +74,7 @@ ZEND_END_ARG_INFO()
 const zend_function_entry ffindex_functions[] = {
 	PHP_FE(confirm_ffindex_compiled,	NULL)		/* For testing, remove later. */
 	PHP_FE(ffindex_build, arginfo_build)
+	PHP_FE(ffindex_list, arginfo_list)
 	PHP_FE(ffindex_get, arginfo_get)
 	PHP_FE(ffindex_unpack, arginfo_unpack)
 	{NULL, NULL, NULL}	/* Must be the last line in ffindex_functions[] */
@@ -320,6 +326,48 @@ PHP_FUNCTION(ffindex_build) {
 }
 /* }}} */
 
+/* procedural APIs*/
+/* {{{ proto ffindex_list(string $index_file)
+*/
+PHP_FUNCTION(ffindex_list) {
+	char *index_file_name;
+	int index_file_len;
+	FILE *index_file;
+
+	/* Parse arguments */
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &index_file_name, &index_file_len) == FAILURE) {
+		return;
+	}
+	if (!index_file_len) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "index filename cannot be empty");
+		RETURN_FALSE;
+	}
+	index_file = php_fopen_with_path(index_file_name, "rb", ".", NULL TSRMLS_CC);
+	if (!index_file) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for reading", index_file_name);
+		RETURN_FALSE;
+	}
+	ffindex_index_t* index = ffindex_index_parse(index_file, 0);
+	if (index != NULL) {
+		size_t i;
+		zval *tmp;
+		array_init(return_value);
+		for(i = 0; i < index->n_entries; i++)
+		{
+			MAKE_STD_ZVAL(tmp);
+			array_init(tmp);
+			add_assoc_string(tmp, "name", index->entries[i].name, 0);
+			add_assoc_long(tmp, "length", index->entries[i].length - 1);
+			add_assoc_long(tmp, "mtime", index->entries[i].mtime);
+			add_next_index_zval(return_value, tmp);
+		}
+		free(index);
+	} else {
+		RETVAL_FALSE;
+	}
+	fclose(index_file);
+}
+	
 /* procedural APIs*/
 /* {{{ proto ffindex_get(string $data_file, string $index_file, string $name)
 */
